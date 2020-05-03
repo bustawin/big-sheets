@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import threading
 import typing as t
 from concurrent.futures.thread import ThreadPoolExecutor
-from functools import partial
-from threading import Thread
+from functools import partial, singledispatchmethod
 
 from bigsheets.domain import command, event
 from bigsheets.service import handler as h, running
@@ -25,9 +23,22 @@ class MessageBus:
     Receives messages (events and commands) and executes them through
     previously registered handlers.
 
-    Although this bus handles commands, it does not return a response
-    to the caller. So, this bus treats commands and events the
-    same way.
+    Events are sent to multiple event handlers (listeners)
+    asynchronously, and each handler fails independently.
+
+    Commands are sent to one command handler (listener) synchronously,
+    so the caller blocks and gets the result of the handler, as when
+    executing a regular function.
+
+    +----------------+--------------------+-----------------+
+    |                | Event              | Command         |
+    +----------------+--------------------+-----------------+
+    | Named          | Past tense         | Imperative mood |
+    +----------------+--------------------+-----------------+
+    | Error handling | Fail independently | Fail noisily    |
+    +----------------+--------------------+-----------------+
+    | Sent to        | All listeners      | One recipient   |
+    +----------------+--------------------+-----------------+
     """
 
     # This implementation internally uses the asyncio loop as the event
@@ -40,68 +51,60 @@ class MessageBus:
         command_handlers: Handlers
         # Although ideally the handlers should be imported in creation
         # time, this creates a circular dependency
-        self.thread = Thread(
-            target=self._start, name=self.__class__.__name__, daemon=True,
-        )
-        self.running = threading.Event()
         """Whether the message bus is ready to handle messages."""
         self._pool = ThreadPoolExecutor(
             max_workers=5, thread_name_prefix=self.__class__.__name__
         )
 
     def start(
-        self, message: Message, event_handlers: Handlers, command_handlers: Handlers,
+        self, event_handlers: Handlers, command_handlers: Handlers,
     ):
         """Registers handlers, starts running the event loop, and
         executes the handlers of the passed-in message.
         """
-        assert threading.current_thread().name != self.__class__.__name__
+        # todo we should init event / commands in __init__  now now
         self.event_handlers = event_handlers
         self.command_handlers = command_handlers
-        self.thread.start()
-        self.running.wait()
-        self.handle(message)
 
-    def handle(self, message: Message):
+    @singledispatchmethod
+    def handle(self, message):
         """Handle a message."""
-        assert threading.current_thread().name != self.__class__.__name__
+        raise TypeError(f"{message} is not a command or event.")
 
-        assert self.loop.is_running(), "Loop is not running"
+    @handle.register
+    def _(self, command: command.Command):
+        handlers = self._get_handlers(command, self.command_handlers)
+        assert len(handlers) == 1, "Commands can only have one handler"
+        return self._exec(next(iter(handlers)), command)
 
-        self.loop.call_soon_threadsafe(
-            partial(asyncio.create_task, self._handle(message))
-        )
-
-    def _start(self):
-        assert threading.current_thread().name == self.__class__.__name__
-        self.loop = asyncio.new_event_loop()
-        self.loop.call_soon(lambda: self.running.set())
-        self.loop.run_forever()
-
-    async def _handle(self, message: Message):
+    @handle.register
+    def _(self, event: event.Event):
         """Handle a message in another thread."""
-        assert threading.current_thread().name == self.__class__.__name__
-        handlers = (
-            self.event_handlers
-            if isinstance(message, event.Event)
-            else self.command_handlers
-        )
-        handlers_for_message = handlers.get(message.__class__)
-        if not handlers_for_message:
-            log.error("No handlers defined for %s", message)
-            return
-
-        for handler in handlers_for_message:
-            self.loop.run_in_executor(self._pool, partial(self._exec, handler, message))
+        for handler in self._get_handlers(event, self.event_handlers):
+            self._pool.submit(partial(self._exec, handler, event))
 
     def _exec(self, handler, message):
         name = threading.current_thread().name
         log.debug("Executing %s with %s on %s", message, handler, name)
         try:
-            handler(message)
+            r = handler(message)
         except running.Exiting:
             log.debug("Exiting exception from %s with %s on %s", message, handler, name)
+            raise
         except Exception:
             log.exception("Exception from %s with %s on %s", message, handler, name)
+            raise
         else:
             log.debug("Finished execution of %s with %s on %s.", message, handler, name)
+            return r
+
+    def _get_handlers(self, message: Message, handlers: Handlers):
+        message_handlers = handlers.get(message.__class__)
+        if not message_handlers:
+            raise NoHandlersDefined(message)
+        return message_handlers
+
+
+class NoHandlersDefined(Exception):
+    def __init__(self, message: Message):
+        self.message = message

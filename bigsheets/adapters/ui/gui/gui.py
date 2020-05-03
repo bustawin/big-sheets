@@ -4,6 +4,7 @@ import typing as t
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from threading import Thread
 
 import webview as pywebview
 
@@ -35,10 +36,9 @@ class GUIAdapter(UIPort):
                 self.webview,
                 self.ctrl,
                 self.handle_closing_window,
-                on_loaded,
+                partial(self._execute_outside_main_thread, on_loaded),
             )
         )
-
         self.webview.start(debug=bigsheets.service.utils.debug())
 
     def ask_user_for_sheet(self):
@@ -57,6 +57,12 @@ class GUIAdapter(UIPort):
         self.windows.remove(window)
         if not self.windows:
             running.exit()
+
+    def _execute_outside_main_thread(self, on_loaded):
+        # pywebview wants to be alone executing its event loop
+        # in the main thread, so we need to move the rest of the
+        # starting in a separate thread
+        Thread(target=on_loaded, name="bootstrap").start()
 
 
 class Window:

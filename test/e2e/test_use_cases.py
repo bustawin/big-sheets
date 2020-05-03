@@ -84,21 +84,31 @@ class TestQuery:
         """
         MockedGUIAdapter, native_window = gui
         native_window.create_file_dialog = mock.MagicMock(
+            # Create a sheet1 with cities.csv content
             return_value=[FIXTURES / "cities.csv"]
         )
         bs = BigSheets(UI=MockedGUIAdapter, engine_factory=engine_factory)
         bs.start()
         bs.ui: GUIAdapter
 
-        session = engine_factory()
-        with session:
-            session.execute("create table sheet1(x numeric)")
-            session.execute("insert into sheet1 values (1)")
-            session.commit()
-
         bs.ui.windows[-1]._view.query("select * from sheet1", 1, 0)
-        assert bs.ui.windows[-1].ctrl.table.set.mock_calls[0] == mock.call(
-            ((1,),), ("x",)
+        # We get the first row of the csv
+        # Note that mock_calls[0] is the temp table created when loading
+        # the csv (which we assert in test_open_csv)
+        assert bs.ui.windows[-1].ctrl.table.set.mock_calls[1] == mock.call(
+            ((41, 5, 59, "N", 80, 39, 0, "W", "Youngstown", "OH"),),
+            (
+                "cities",
+                "LatM",
+                "LatS",
+                "NS",
+                "LonD",
+                "LonM",
+                "LonS",
+                "EW",
+                "City",
+                "State",
+            ),
         )
 
     @pytest.mark.skip(reason="Not developed.")

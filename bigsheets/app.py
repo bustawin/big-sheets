@@ -35,10 +35,10 @@ class BigSheets:
 
     def _start_message_bus(self):
         self.message_bus.start(
-            command.AskUserForASheet(),
             self.container.resolve("event_handlers"),
             self.container.resolve("command_handlers"),
         )
+        self.message_bus.handle(command.AskUserForASheet())
 
 
 def bootstrap(
