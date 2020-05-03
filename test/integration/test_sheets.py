@@ -27,3 +27,15 @@ class TestSheets:
         # Check db
         x = e.execute("SELECT * FROM sheet1 LIMIT 1")
         assert next(x) == (41, 5, 59, "N", 80, 39, 0, "W", "Youngstown", "OH")
+
+    def test_engine_persistance(self, engine_factory):
+        session = engine_factory()
+        with session:
+            session.execute("create table s1(x numeric)")
+            session.execute('insert into s1 values(1)')
+            session.commit()
+        # Close session and open a new one
+        new_session = engine_factory()
+        with new_session:
+            result = tuple(new_session.execute('select * from s1'))
+            assert result[0][0] == 1

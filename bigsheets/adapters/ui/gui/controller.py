@@ -44,7 +44,7 @@ class Info(Controller):
 class Table(Controller):
     variable = "table"
 
-    def set(self, rows: list, header: list):
+    def set(self, rows: t.Collection, header: t.Collection):
         self._exec(self.set, rows, header)
 
 

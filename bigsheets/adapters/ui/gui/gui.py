@@ -10,8 +10,8 @@ import webview as pywebview
 import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.domain import model
-from bigsheets.service import running
-from bigsheets.service.message_bus import MessageBus
+from bigsheets.service import read_model, running
+
 # noinspection PyUnresolvedReferences
 from . import utils
 from .view import View
@@ -22,16 +22,21 @@ class GUIAdapter(UIPort):
     webview: pywebview = pywebview
     ctrl: controller = controller
 
-    def __init__(self, bus: MessageBus):
-        super().__init__(bus)
+    def __init__(self, reader: read_model.ReadModel):
+        super().__init__(reader)
         self.windows: t.List[Window] = []
-        self.bus = bus
 
     def start(self, on_loaded: callable):
         # todo should on_loaded be an event?
         assert not self.windows
         self.windows.append(
-            Window(self.bus, self.webview, self.ctrl, self.handle_closing_window, on_loaded)
+            Window(
+                self.reader,
+                self.webview,
+                self.ctrl,
+                self.handle_closing_window,
+                on_loaded,
+            )
         )
 
         self.webview.start(debug=bigsheets.service.utils.debug())
@@ -64,13 +69,13 @@ class Window:
 
     def __init__(
         self,
-        bus: MessageBus,
+        reader: read_model.ReadModel,
         webview: pywebview,
         ctrl: controller,
         on_closing: callable,
-        on_loaded: callable
+        on_loaded: callable,
     ):
-        self._view = View(bus)
+        self._view = View(reader, None)
         self.webview = webview
         self.native_window = self.webview.create_window(
             "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
@@ -83,6 +88,7 @@ class Window:
             ctrl.Table(self.native_window),
             ctrl.Query(self.native_window),
         )
+        self._view.ctrl = self.ctrl
 
     def ask_user_for_sheet(self) -> t.Optional[Path]:
         r = self.native_window.create_file_dialog(

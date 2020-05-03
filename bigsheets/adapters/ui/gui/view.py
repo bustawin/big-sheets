@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import logging
+import sqlite3
 from dataclasses import dataclass
 from functools import wraps
 
-from bigsheets.service.message_bus import MessageBus
+from bigsheets.service import read_model
+from . import gui
+
+log = logging.getLogger(__name__)
 
 
 def print_exception(f):
@@ -21,7 +25,8 @@ def print_exception(f):
 
 @dataclass
 class View:
-    bus: MessageBus
+    reader: read_model.ReadModel
+    ctrl: gui.Window.Ctrl
 
     @print_exception
     def open(self):
@@ -29,8 +34,17 @@ class View:
 
     @print_exception
     def query(self, query: str, limit, page):
-        # todo CQRS
-        self.spreadsheet.query(query, limit, page)
+        try:
+            r = self.reader.query(query, limit, page)
+            headers = next(r)
+            # for huge number of rows we could use simplejson to
+            # avoid creating a tuple in memory
+            results = tuple(r)
+        except sqlite3.OperationalError as e:  # todo wrap error with db generic?
+            log.info(f"Wrong query {e}")
+            self.ctrl.query.set_message(str(e))
+        else:
+            self.ctrl.table.set(results, headers)
 
     @print_exception
     def open_csv(self, file: str):

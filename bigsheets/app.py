@@ -13,7 +13,7 @@ from bigsheets.service import (
     command_handlers,
     event_handlers,
     message_bus,
-    unit_of_work,
+    read_model, unit_of_work,
 )
 
 
@@ -47,6 +47,7 @@ def bootstrap(
     UI: t.Type[ui_port.UIPort] = gui.GUIAdapter,
 ) -> punq.Container:
     container = punq.Container()
+    container.register(read_model.ReadModel, scope=punq.Scope.singleton)
     container.register(
         unit_of_work.UnitOfWork,
         Uow,

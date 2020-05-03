@@ -1,6 +1,8 @@
 from time import sleep
 from unittest import mock
 
+import pytest
+
 from bigsheets.adapters.ui.gui.gui import GUIAdapter
 from bigsheets.app import BigSheets
 from test.conftest import FIXTURES
@@ -65,3 +67,45 @@ def test_open_csv(gui, engine_factory):
     assert calls[10] == mock.call.Progress().finish()
     # todo why not table?
     assert calls[11] == mock.call.Info().unset()
+
+
+class TestQuery:
+    """Feature: Query the sheet
+    As an user, I want to write and submit queries so I can see what
+    I want in the sheet.
+    """
+
+    def test_query_the_sheet(self, gui, engine_factory):
+        """Scenario: Query the sheet
+
+        Given A sheet is opened
+        When I type a query and submit it
+        Then I see the resulting sheet of applying the query
+        """
+        MockedGUIAdapter, native_window = gui
+        native_window.create_file_dialog = mock.MagicMock(
+            return_value=[FIXTURES / "cities.csv"]
+        )
+        bs = BigSheets(UI=MockedGUIAdapter, engine_factory=engine_factory)
+        bs.start()
+        bs.ui: GUIAdapter
+
+        session = engine_factory()
+        with session:
+            session.execute("create table sheet1(x numeric)")
+            session.execute("insert into sheet1 values (1)")
+            session.commit()
+
+        bs.ui.windows[-1]._view.query("select * from sheet1", 1, 0)
+        assert bs.ui.windows[-1].ctrl.table.set.mock_calls[0] == mock.call(
+            ((1,),), ("x",)
+        )
+
+    @pytest.mark.skip(reason="Not developed.")
+    def test_wrong_query(self):
+        """Scenario: User wrote the query wrongly.
+
+        Given A sheet is opened
+        When I wrongly type a query and submit it
+        Then I see an error message hinting where the error is.
+        """

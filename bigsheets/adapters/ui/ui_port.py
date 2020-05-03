@@ -5,7 +5,7 @@ import typing as t
 from pathlib import Path
 
 from bigsheets.domain import model
-from bigsheets.service import message_bus
+from bigsheets.service import read_model
 
 
 class UIPort(abc.ABC):
@@ -15,8 +15,8 @@ class UIPort(abc.ABC):
     Internally uses the GUI xor CLI, depending of the environment.
     """
 
-    def __init__(self, bus: message_bus.MessageBus):
-        self.bus = bus
+    def __init__(self, reader: read_model.ReadModel):
+        self.reader = reader
 
     @abc.abstractmethod
     def start(self, on_loaded: callable):
