@@ -7,3 +7,14 @@ to add more domains we should create a subfolder in bigsheet
 like bigsheet/sheet/<move everything here> so we can add 
 /bigsheet/domain2/<new stuff> and
 a bigsheet/bigsheet.py as the bootstrapper of everything.
+
+Architecture
+************
+
+Main thread (pywebview), after init -> "bootstrap" thread (runs first command)
+
+bus for events has a threadpool of max 5 threads, bus for commands uses the same thread as the caller.
+
+pywebview stays in the main thread running the event loop.
+pywebview creates a new thread per python call from the JS bridge -> command handler in bus (same thread as before)
+
