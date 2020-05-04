@@ -19,3 +19,8 @@ class OpenSheet(Command):
 @dataclass
 class OpenWindow(Command):
     pass
+
+
+@dataclass
+class RemoveSheet(Command):
+    name: str

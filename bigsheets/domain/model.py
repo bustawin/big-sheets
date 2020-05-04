@@ -15,7 +15,7 @@ class ModelWithEvent(t.Protocol):
 
 
 class Sheet:
-    def __init__(self, name: str, rows: Rows, header: Row, num_rows: int):
+    def __init__(self, name: str, rows: Rows, header: Row, num_rows: int, filename: str):
         self.rows: Rows = rows
         """The rows of the sheet. For a sheet that is opening,
         the rows that all available at the moment.
@@ -29,15 +29,22 @@ class Sheet:
          even if not all are available yet.
          """
         self.header: Row = header
+        self.filename = filename
 
-    def opened(self):
-        self.events.append(event.SheetOpened(self))
+    def opened(self, opened_sheets: t.Collection[Sheet]):
+        self.events.append(event.SheetOpened(self, opened_sheets))
 
     def __str__(self):
         return f"Sheet {self.name}"
 
     def __repr__(self):
         return f"<Sheet {self.name}>"
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def remove(self, remaining_sheets: t.Collection[Sheet]):
+        self.events.append(event.SheetRemoved(remaining_sheets=remaining_sheets))
 
 
 def new_sheet_name(number_of_sheets: int):

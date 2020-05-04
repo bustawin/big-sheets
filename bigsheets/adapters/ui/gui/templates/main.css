@@ -20,6 +20,10 @@ input[type=submit], button {
     width: 4em;
 }
 
+.sheets-button-line {
+    text-align: left;
+}
+
 
 #query-form {
     text-align: center;
@@ -47,7 +51,9 @@ input[type=submit], button {
 }
 
 #query-form input[type=submit] {
-    height: 25px
+    -webkit-appearance: button;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
 main {
@@ -161,8 +167,8 @@ footer {
     background: Window;
     color: WindowText;
     border: 0.5px solid rgb(185, 185, 185);
-    border-radius:8px;
-    box-shadow: -8px 8px 35px 2px rgba(150,150,150,1);
+    border-radius: 8px;
+    box-shadow: -8px 8px 35px 2px rgba(150, 150, 150, 1);
 }
 
 .tippy-box[data-theme~='ours'][data-placement^='bottom'] > .tippy-arrow::before {

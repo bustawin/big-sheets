@@ -12,9 +12,17 @@ class UpdateUISheetOpened(Handler):
         self.ui = ui
 
     def __call__(self, message: e.SheetOpened):
-        self.ui.sheet_opened()
+        self.ui.sheet_opened(*message.opened_sheets)
 
 
-HANDLERS: Handlers = {
-    UpdateUISheetOpened,
-}
+class SheetRemoved(Handler):
+    HANDLES = {e.SheetRemoved}
+
+    def __init__(self, ui: ui_port.UIPort):
+        self.ui = ui
+
+    def __call__(self, message: e.SheetRemoved):
+        self.ui.sheet_removed(*message.remaining_sheets)
+
+
+HANDLERS: Handlers = {UpdateUISheetOpened, SheetRemoved}

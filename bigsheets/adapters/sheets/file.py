@@ -44,7 +44,6 @@ class CSVFile:
         else:
             self.headers = tuple(f"C{i}" for i in range(self.num_cells))
         self.f.seek(0)
-
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -58,6 +57,11 @@ class CSVFile:
                 first_row = False
                 continue
             yield row
+
+    @property
+    def name(self):
+        """The name of the file."""
+        return self.path.name
 
     @cached_property
     def num_lines(self) -> int:

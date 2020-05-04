@@ -41,4 +41,16 @@ class OpenSheet(Handler):
         self.ui.update_sheet_opening(quantity)
 
 
-HANDLERS: Handlers = {OpenSheet, OpenSheetSelector}
+class RemoveSheet(Handler):
+    HANDLES = {command.RemoveSheet}
+
+    def __init__(self, uow: unit_of_work.UnitOfWork):
+        self.uow = uow
+
+    def __call__(self, message: command.RemoveSheet):
+        with self.uow.instantiate() as uowi:
+            removed_sheet = uowi.sheets.remove_sheet(name=message.name)
+            uowi.commit(removed_sheet)
+
+
+HANDLERS: Handlers = {OpenSheet, OpenSheetSelector, RemoveSheet}

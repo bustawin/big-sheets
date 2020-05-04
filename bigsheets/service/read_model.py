@@ -39,3 +39,7 @@ class ReadModel:
         yield tuple(h[0] for h in cursor.description)
         for row in cursor:
             yield row
+
+    def opened_sheets(self):
+        with self.uow.instantiate() as uowi:
+            return uowi.sheets.get()

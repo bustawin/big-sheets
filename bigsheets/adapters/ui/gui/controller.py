@@ -74,4 +74,8 @@ class Nav(Controller):
         self._exec(self.disable)
 
 
-CTRLS = {Progress, Info, Table, Query, Nav}
+class SheetsButton(Controller):
+    variable = "sheetsButton"
+
+    def set(self, sheets: t.Collection[dict]):
+        self._exec(self.set, sheets)

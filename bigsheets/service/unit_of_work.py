@@ -4,7 +4,7 @@ import sqlite3
 import typing as t
 from dataclasses import dataclass
 
-from bigsheets.adapters.sheets.sheets import SheetsPort
+from bigsheets.adapters.sheets import sheets
 from bigsheets.domain import model as m
 from bigsheets.service.message_bus import MessageBus
 
@@ -13,7 +13,7 @@ from bigsheets.service.message_bus import MessageBus
 class UnitOfWork:
     sheet_engine_factory: callable
     bus: MessageBus
-    Sheets: t.Type[SheetsPort]
+    Sheets: t.Type[sheets.SheetsPort]
 
     def instantiate(self) -> UnitOfWorkInstance:
         session = self.sheet_engine_factory()
@@ -36,7 +36,7 @@ class UnitOfWork:
 class UnitOfWorkInstance:
     bus: MessageBus
     session: sqlite3.Connection
-    sheets: SheetsPort
+    sheets: sheets.SheetsPort
 
     def commit(self, *models: m.ModelWithEvent):
         """Commit and, after, submit the events."""

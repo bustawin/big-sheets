@@ -148,7 +148,7 @@ class Query {
   }
 
   query (resetPage = true) {
-    if (this._disabled) throw Error("Cannot query while disabled.")
+    if (this._disabled) throw Error('Cannot query while disabled.')
     if (resetPage) this.page = 0
     this.message.innerText = ''
     const query = this.queryEditor.getValue()
@@ -196,22 +196,82 @@ class Nav {
      * @type {HTMLButtonElement}
      * @private
      */
-    this._openWindowButton = document.getElementById("open-window")
-    this._openWindowButton.onclick = () => {
+    this._openWindowBtn = document.getElementById('open-window')
+    this._openWindowBtn.onclick = () => {
       console.log('fooobar')
       pywebview.api.open_window()
+    }
+    this._sheetsBtn = document.getElementById('sheets-button')
+    this._openSheetBtn = document.getElementById('open-sheet-button')
+    this._openSheetBtn.onclick = () => {
+      pywebview.api.open_sheet()
+    }
+    this._exportViewBtn = document.getElementById('export-view-button')
+    this._exportViewBtn.onclick = () => {
+      pywebview.api.export_view()
+    }
+    this._saveWorkspaceBtn = document.getElementById('save-workspace-button')
+    this._saveWorkspaceBtn.onclick = () => {
+      pywebview.api.save_workspace()
     }
     this.disable()
   }
 
   disable () {
-    this._openWindowButton.disabled = true
+    this._openWindowBtn.disabled = this._sheetsBtn.disabled = this._openSheetBtn.disabled =
+      this._exportViewBtn.disabled = this._saveWorkspaceBtn.disabled
+        = true
   }
 
   enable () {
-    this._openWindowButton.disabled = false
+    this._openWindowBtn.disabled = this._sheetsBtn.disabled = this._openSheetBtn.disabled =
+      this._exportViewBtn.disabled = this._saveWorkspaceBtn.disabled
+        = false
+  }
+}
+
+class SheetsButton {
+  constructor () {
+    this.sheets = []
+    this._tippy = tippy('#sheets-button', {
+      content: this._content.bind(this),
+      trigger: 'click',
+      hideOnClick: 'toggle',
+      interactive: true,
+      theme: 'ours',
+      animation: 'scale',
+      inertia: true
+    })[0]
   }
 
+  _content () {
+    const sheets = this.sheets.map(({filename, name}) => {
+      const delElementButton = document.createElement('button')
+      delElementButton.className = 'close-button'
+      delElementButton.innerHTML = '<i class=\'fa fa-lg fa-times\'></i>'
+      delElementButton.onclick = () => this.removeSheet(name)
+      delElementButton.style = 'margin-right:1em'
+      const text = document.createElement('span')
+      text.innerHTML = `${filename}&nbsp;<em>as</em>&nbsp;<strong>${name}</strong>`
+      const div = document.createElement('div')
+      div.appendChild(delElementButton)
+      div.appendChild(text)
+      return div
+    })
+    const content = document.createElement('div')
+    content.className = 'sheets-button-line'
+    content.append(...sheets)
+    return content
+  }
+
+  set (sheets) {
+    this.sheets = sheets
+    this._tippy.setContent(this._content())
+  }
+
+  removeSheet (name) {
+    pywebview.api.remove_sheet(name)
+  }
 }
 
 window.progress = new Progress()
@@ -219,22 +279,11 @@ window.info = new Info()
 window.table = new Table()
 window.query = new Query()
 window.nav = new Nav()
+window.sheetsButton = new SheetsButton()
 
 /**
  * @type {HTMLDivElement}
  */
-const d = document.createElement('div')
-const c = document.createElement('div')
-c.style = 'vertical-align: middle'
-c.innerHTML = '<button class=\'close-button\'><i class=\'fa fa-lg fa-times\'></i></button>filename1 <em>as</em> <strong>sheet1</strong>'
-d.appendChild(c)
 
-tippy('#sheets-button', {
-  content: d,
-  trigger: 'click',
-  hideOnClick: 'toggle',
-  interactive: true,
-  theme: 'ours',
-  animation: 'scale',
-  inertia: true
-})
+
+

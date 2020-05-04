@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import abc
 import logging
 import sqlite3
+import typing as t
 from pathlib import Path
 
 import more_itertools
@@ -30,6 +33,9 @@ class EngineFactory:
 
 engine_factory = EngineFactory()
 
+sheets: t.Set[model.Sheet] = set()  # todo use a thread-safe structure
+"""The opened sheets models."""
+
 
 class SheetsPort(abc.ABC):
     """The repository of sheets as part of the infrastructure layer.
@@ -50,6 +56,16 @@ class SheetsPort(abc.ABC):
     def number_of_sheets(self) -> int:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def remove_sheet(self, *, name: str) -> model.Sheet:
+        """Removes a sheet (ie. closes)."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get(self) -> t.Iterator[model.Sheet]:
+        """Gets all the sheets."""
+        raise NotImplementedError
+
 
 class SheetsAdaptor(SheetsPort):
     """The repository of sheets."""
@@ -65,8 +81,13 @@ class SheetsAdaptor(SheetsPort):
         with CSVFile(filepath) as file:
             table_name = model.new_sheet_name(self.number_of_sheets())
             sheet = model.Sheet(
-                table_name, rows=file.rows, header=file.headers, num_rows=file.num_lines
+                table_name,
+                rows=file.rows,
+                header=file.headers,
+                num_rows=file.num_lines,
+                filename=file.name,
             )
+            sheets.add(sheet)
             initial_callback(sheet)
             sheet.wrongs = []
             num_opened = 0
@@ -75,7 +96,7 @@ class SheetsAdaptor(SheetsPort):
                 sheet.wrongs.extend(wrongs)
                 num_opened += self.rows_per_chunk(file.num_cells)
                 callback(sheet, num_opened)
-        sheet.opened()
+        sheet.opened(sheets)
         return sheet
 
     def number_of_sheets(self) -> int:
@@ -110,3 +131,13 @@ class SheetsAdaptor(SheetsPort):
 
     def rows_per_chunk(self, cols: int):
         return self.SQLITE_VAR_LIMIT // cols
+
+    def remove_sheet(self, *, name: str) -> model.Sheet:
+        sheet = next(sheet for sheet in sheets if sheet.name == name)
+        self.session.execute(f"DROP TABLE {name}")
+        sheets.remove(sheet)
+        sheet.remove(sheets)
+        return sheet
+
+    def get(self):
+        return iter(sheets)

@@ -5,7 +5,8 @@ import sqlite3
 from dataclasses import dataclass
 from functools import wraps
 
-from bigsheets.service import read_model
+from bigsheets.domain import command
+from bigsheets.service import message_bus, read_model
 from . import gui
 
 log = logging.getLogger(__name__)
@@ -28,10 +29,8 @@ class View:
     reader: read_model.ReadModel
     ctrl: gui.Window.Ctrl
     ui: gui.GUIAdapter
-
-    @print_exception
-    def open(self):
-        pass
+    window: gui.Window
+    bus: message_bus.MessageBus
 
     @print_exception
     def query(self, query: str, limit, page):
@@ -50,3 +49,19 @@ class View:
     @print_exception
     def open_window(self):
         self.ui.open_window()
+
+    @print_exception
+    def remove_sheet(self, name: str):
+        self.bus.handle(command.RemoveSheet(name))
+
+    @print_exception
+    def open_sheet(self):
+        raise NotImplementedError
+
+    @print_exception
+    def export_view(self):
+        raise NotImplementedError
+
+    @print_exception
+    def save_workspace(self):
+        raise NotImplementedError

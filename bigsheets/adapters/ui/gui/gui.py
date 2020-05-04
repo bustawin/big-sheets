@@ -12,7 +12,8 @@ import webview as pywebview
 import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.domain import model
-from bigsheets.service import read_model, running
+from bigsheets.service import message_bus, read_model, running
+
 # noinspection PyUnresolvedReferences
 from . import utils
 from .view import View
@@ -23,9 +24,10 @@ class GUIAdapter(UIPort):
     webview: pywebview = pywebview
     ctrl: controller = controller
 
-    def __init__(self, reader: read_model.ReadModel):
+    def __init__(self, reader: read_model.ReadModel, bus: message_bus.MessageBus):
         super().__init__(reader)
         self.windows: t.List[Window] = []
+        self.bus = bus
 
     def start(self, on_loaded: callable):
         # todo should on_loaded be an event?
@@ -48,8 +50,14 @@ class GUIAdapter(UIPort):
     def update_sheet_opening(self, completed: int):
         self.windows[-1].update_sheet_opening(completed)
 
-    def sheet_opened(self):
+    def sheet_opened(self, *opened_sheets: model.Sheet):
         self.windows[-1].sheet_opened()
+        for window in self.windows:
+            window.set_open_sheets(*opened_sheets)
+
+    def sheet_removed(self, *sheet: model.Sheet):
+        for window in self.windows:
+            window.set_open_sheets(*sheet)
 
     def handle_closing_window(self, window: Window):
         self.windows.remove(window)
@@ -79,12 +87,13 @@ class Window:
         table: controller.Table
         query: controller.Query
         nav: controller.Nav
+        sheets_button: controller.SheetsButton
 
     def __init__(
         self, ui: GUIAdapter, on_closing: callable, on_loaded: callable,
     ):
         self.reader: read_model.ReadModel = ui.reader
-        self._view = View(self.reader, None, ui)
+        self._view = View(self.reader, None, ui, self, ui.bus)
         self.webview: pywebview = ui.webview
         self.native_window = self.webview.create_window(
             "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
@@ -96,7 +105,8 @@ class Window:
             ui.ctrl.Info(self.native_window),
             ui.ctrl.Table(self.native_window),
             ui.ctrl.Query(self.native_window),
-            ui.ctrl.Nav(self.native_window)
+            ui.ctrl.Nav(self.native_window),
+            ui.ctrl.SheetsButton(self.native_window),
         )
         self._view.ctrl = self.ctrl
 
@@ -110,7 +120,9 @@ class Window:
 
     def start_opening_sheet(self, sheet: model.Sheet):
         self.ctrl.progress.start_processing(sheet.num_rows)
-        self.ctrl.info.set("Some functionality is disabled until the sheet finishes opening.")
+        self.ctrl.info.set(
+            "Some functionality is disabled until the sheet finishes opening."
+        )
         self.ctrl.table.set(sheet.rows, sheet.header)
         self.ctrl.query.init(sheet.name, sheet.header)
         self.ctrl.query.disable()
@@ -134,3 +146,9 @@ class Window:
         self.ctrl.query.init(sheet_name, headers)
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
+        self.set_open_sheets(*self.reader.opened_sheets())
+
+    def set_open_sheets(self, *sheets: model.Sheet):
+        self.ctrl.sheets_button.set(
+            [{"name": sheet.name, "filename": sheet.filename} for sheet in sheets]
+        )
