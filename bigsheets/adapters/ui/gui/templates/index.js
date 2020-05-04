@@ -1,11 +1,3 @@
-function openFile () {
-  pywebview.api.open()
-}
-
-function qquery () {
-
-}
-
 /**
  * @param {string[][]} sheet
  */
@@ -109,6 +101,7 @@ class Table {
 class Query {
   constructor () {
     this.queryEditor = null
+    this._disabled = false
     this.message = document.getElementById('query-message')
     console.assert(this.message)
     /**
@@ -131,6 +124,11 @@ class Query {
       this.query()
     }
     this._queryForm.hidden = true
+    /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    this._queryFormSubmit = document.getElementById('query-submit')
 
     /**
      * @type {HTMLInputElement}
@@ -150,6 +148,7 @@ class Query {
   }
 
   query (resetPage = true) {
+    if (this._disabled) throw Error("Cannot query while disabled.")
     if (resetPage) this.page = 0
     this.message.innerText = ''
     const query = this.queryEditor.getValue()
@@ -163,6 +162,14 @@ class Query {
 
   onQueryChanged () {
     this.queryEditor.getValue()
+  }
+
+  enable () {
+    this._disabled = this._limit.disabled = this._page.disabled = this._queryFormSubmit.disabled = false
+  }
+
+  disable () {
+    this._disabled = this._limit.disabled = this._page.disabled = this._queryFormSubmit.disabled = true
   }
 
   get limit () {
@@ -183,10 +190,35 @@ class Query {
 
 }
 
+class Nav {
+  constructor () {
+    /**
+     * @type {HTMLButtonElement}
+     * @private
+     */
+    this._openWindowButton = document.getElementById("open-window")
+    this._openWindowButton.onclick = () => {
+      console.log('fooobar')
+      pywebview.api.open_window()
+    }
+    this.disable()
+  }
+
+  disable () {
+    this._openWindowButton.disabled = true
+  }
+
+  enable () {
+    this._openWindowButton.disabled = false
+  }
+
+}
+
 window.progress = new Progress()
 window.info = new Info()
 window.table = new Table()
 window.query = new Query()
+window.nav = new Nav()
 
 /**
  * @type {HTMLDivElement}

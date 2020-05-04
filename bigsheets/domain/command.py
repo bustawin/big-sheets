@@ -15,3 +15,7 @@ class AskUserForASheet(Command):
 class OpenSheet(Command):
     filepath: Path
 
+
+@dataclass
+class OpenWindow(Command):
+    pass

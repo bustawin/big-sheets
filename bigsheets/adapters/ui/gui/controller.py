@@ -57,5 +57,21 @@ class Query(Controller):
     def set_message(self, message: str):
         self._exec("setMessage", message)
 
+    def enable(self):
+        self._exec(self.enable)
 
-CTRLS = {Progress, Info, Table, Query}
+    def disable(self):
+        self._exec(self.disable)
+
+
+class Nav(Controller):
+    variable = "nav"
+
+    def enable(self):
+        self._exec(self.enable)
+
+    def disable(self):
+        self._exec(self.disable)
+
+
+CTRLS = {Progress, Info, Table, Query, Nav}

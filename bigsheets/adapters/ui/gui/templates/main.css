@@ -52,7 +52,7 @@ input[type=submit], button {
 
 main {
     width: 100vw;
-    height: calc(100vh - 90px - 1.5em);
+    height: calc(100vh - 90px - 1.75em);
     overflow: scroll;
 }
 

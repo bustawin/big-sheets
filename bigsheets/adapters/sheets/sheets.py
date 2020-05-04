@@ -46,6 +46,10 @@ class SheetsPort(abc.ABC):
     ) -> model.Sheet:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def number_of_sheets(self) -> int:
+        raise NotImplementedError
+
 
 class SheetsAdaptor(SheetsPort):
     """The repository of sheets."""

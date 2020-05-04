@@ -27,6 +27,7 @@ def print_exception(f):
 class View:
     reader: read_model.ReadModel
     ctrl: gui.Window.Ctrl
+    ui: gui.GUIAdapter
 
     @print_exception
     def open(self):
@@ -47,5 +48,5 @@ class View:
             self.ctrl.table.set(results, headers)
 
     @print_exception
-    def open_csv(self, file: str):
-        pass
+    def open_window(self):
+        self.ui.open_window()
