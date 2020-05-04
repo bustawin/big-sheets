@@ -119,3 +119,10 @@ class TestQuery:
         When I wrongly type a query and submit it
         Then I see an error message hinting where the error is.
         """
+
+
+@pytest.mark.skip(reason="Not developed.")
+def test_open_another_sheet():
+    """Opens another sheet with a new window,
+    and added into the sheet list.
+    """

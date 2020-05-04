@@ -41,3 +41,7 @@ class UIPort(abc.ABC):
     @abc.abstractmethod
     def sheet_removed(self, *sheet: model.Sheet):
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def open_sheet(self):
+        raise NotImplementedError

@@ -11,7 +11,7 @@ import webview as pywebview
 
 import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
-from bigsheets.domain import model
+from bigsheets.domain import command, model
 from bigsheets.service import message_bus, read_model, running
 
 # noinspection PyUnresolvedReferences
@@ -70,13 +70,21 @@ class GUIAdapter(UIPort):
         # starting in a separate thread
         Thread(target=on_loaded, name="bootstrap").start()
 
-    def open_window(self):
+    def open_window(self, init_with_sheet=True):
         """Opens a new window showing the table of """
         ev = threading.Event()
         window = Window(self, self.handle_closing_window, lambda: ev.set())
         ev.wait()
         self.windows.append(window)
-        window.init_with_sheet()
+        if init_with_sheet:
+            window.init_with_sheet()
+        return window
+
+    def open_sheet(self):
+        window = self.open_window(init_with_sheet=False)
+        if not self.bus.handle(command.AskUserForASheet()):
+            window.close()
+            self.handle_closing_window(window)
 
 
 class Window:
@@ -99,6 +107,7 @@ class Window:
             "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
         )
         self.native_window.closing += partial(on_closing, self)
+        self.native_window.closed += self._on_close
         self.native_window.loaded += on_loaded
         self.ctrl = self.Ctrl(
             ui.ctrl.Progress(self.native_window),
@@ -152,3 +161,10 @@ class Window:
         self.ctrl.sheets_button.set(
             [{"name": sheet.name, "filename": sheet.filename} for sheet in sheets]
         )
+
+    def close(self):
+        self.native_window.destroy()  # Destroy does not trigger on_close
+
+    def _on_close(self):
+        # todo properly remove the window and view, etc from ram
+        pass

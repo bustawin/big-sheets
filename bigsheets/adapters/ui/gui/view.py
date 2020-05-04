@@ -56,7 +56,7 @@ class View:
 
     @print_exception
     def open_sheet(self):
-        raise NotImplementedError
+        self.ui.open_sheet()
 
     @print_exception
     def export_view(self):

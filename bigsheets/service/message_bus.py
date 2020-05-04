@@ -95,7 +95,13 @@ class MessageBus:
             log.exception("Exception from %s with %s on %s", message, handler, name)
             raise
         else:
-            log.debug("Finished execution of %s with %s on %s.", message, handler, name)
+            log.debug(
+                "Finished execution of %s with %s on %s with result %s",
+                message,
+                handler,
+                name,
+                r,
+            )
             return r
 
     def _get_handlers(self, message: Message, handlers: Handlers):

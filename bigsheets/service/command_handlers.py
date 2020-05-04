@@ -14,8 +14,10 @@ class OpenSheetSelector(Handler):
         self.bus = bus
 
     def __call__(self, message: command.AskUserForASheet):
-        if filepath := self.ui.ask_user_for_sheet():
+        filepath = self.ui.ask_user_for_sheet()
+        if filepath:
             self.bus.handle(command.OpenSheet(filepath))
+        return filepath
 
 
 class OpenSheet(Handler):
