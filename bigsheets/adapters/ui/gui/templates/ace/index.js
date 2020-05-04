@@ -24,7 +24,7 @@ function startEditor (sheetName, headers) {
   queryEditor.commands.addCommand({
     name: 'submit-query',
     bindKey: {win: 'Ctrl-Return', mac: 'Command-Return'},
-    exec: () => window.query.query(),
+    exec: () => window.query.submitQuery(),
     readOnly: true // false if this command should not apply in readOnly mode
   })
   return queryEditor

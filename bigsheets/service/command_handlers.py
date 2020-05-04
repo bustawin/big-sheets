@@ -3,7 +3,7 @@ from __future__ import annotations
 from bigsheets.adapters.ui import ui_port
 from bigsheets.domain import command
 from bigsheets.service import message_bus, unit_of_work
-from bigsheets.service.handler import Handler, Handlers
+from bigsheets.service.handler import Handler, Handlers, Message
 
 
 class OpenSheetSelector(Handler):
@@ -55,4 +55,15 @@ class RemoveSheet(Handler):
             uowi.commit(removed_sheet)
 
 
-HANDLERS: Handlers = {OpenSheet, OpenSheetSelector, RemoveSheet}
+class ExportView(Handler):
+    HANDLES = {command.ExportView}
+
+    def __init__(self, uow: unit_of_work.UnitOfWork):
+        self.uow = uow
+
+    def __call__(self, message: command.ExportView):
+        with self.uow.instantiate() as uowi:
+            uowi.sheets.export_view(message.query, message.filepath)
+
+
+HANDLERS: Handlers = {OpenSheet, OpenSheetSelector, RemoveSheet, ExportView}

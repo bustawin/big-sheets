@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import abc
+import csv
 import logging
 import sqlite3
 import typing as t
+from itertools import chain
 from pathlib import Path
 
 import more_itertools
@@ -64,6 +66,10 @@ class SheetsPort(abc.ABC):
     @abc.abstractmethod
     def get(self) -> t.Iterator[model.Sheet]:
         """Gets all the sheets."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def export_view(self, query: str, filepath: Path):
         raise NotImplementedError
 
 
@@ -141,3 +147,14 @@ class SheetsAdaptor(SheetsPort):
 
     def get(self):
         return iter(sheets)
+
+    def query(self, query: str):
+        cursor: sqlite3.Cursor = self.session.execute(query)
+        headers = tuple(h[0] for h in cursor.description)
+        return headers, cursor
+
+    def export_view(self, query: str, filepath: Path):
+        headers, rows = self.query(query)
+        with filepath.open(mode='w') as f:
+            writer = csv.writer(f)
+            writer.writerows(chain([headers], rows))

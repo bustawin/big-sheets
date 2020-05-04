@@ -111,7 +111,7 @@ class Query {
     console.assert(this._limit)
     this.limit = 100 // Set limit before being able to handle changes
     this._limit.onchange = () => {
-      this.query()
+      this.submitQuery()
     }
     /**
      *
@@ -121,7 +121,7 @@ class Query {
     this._queryForm = document.getElementById('query-form')
     this._queryForm.onsubmit = event => {
       if (event) event.preventDefault()
-      this.query()
+      this.submitQuery()
     }
     this._queryForm.hidden = true
     /**
@@ -136,7 +136,7 @@ class Query {
     this._page = document.getElementById('page')
     this.page = 0
     this._page.onchange = () => {
-      this.query(false)
+      this.submitQuery(false)
     }
   }
 
@@ -147,13 +147,12 @@ class Query {
     this._queryForm.hidden = false
   }
 
-  query (resetPage = true) {
+  submitQuery (resetPage = true) {
     if (this._disabled) throw Error('Cannot query while disabled.')
     if (resetPage) this.page = 0
     this.message.innerText = ''
-    const query = this.queryEditor.getValue()
-    console.log(query)
-    pywebview.api.query(query, this.limit, this.page)
+    console.log(this.query)
+    pywebview.api.query(this.query, this.limit, this.page)
   }
 
   setMessage (message) {
@@ -170,6 +169,10 @@ class Query {
 
   disable () {
     this._disabled = this._limit.disabled = this._page.disabled = this._queryFormSubmit.disabled = true
+  }
+
+  get query () {
+    return this.queryEditor.getValue()
   }
 
   get limit () {
@@ -208,7 +211,7 @@ class Nav {
     }
     this._exportViewBtn = document.getElementById('export-view-button')
     this._exportViewBtn.onclick = () => {
-      pywebview.api.export_view()
+      pywebview.api.export_view(window.query.query)
     }
     this._saveWorkspaceBtn = document.getElementById('save-workspace-button')
     this._saveWorkspaceBtn.onclick = () => {

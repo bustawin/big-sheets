@@ -24,3 +24,9 @@ class OpenWindow(Command):
 @dataclass
 class RemoveSheet(Command):
     name: str
+
+
+@dataclass
+class ExportView(Command):
+    query: str
+    filepath: Path

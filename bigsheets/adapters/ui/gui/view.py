@@ -59,8 +59,8 @@ class View:
         self.ui.open_sheet()
 
     @print_exception
-    def export_view(self):
-        raise NotImplementedError
+    def export_view(self, query: str):
+        self.window.export_view(query)
 
     @print_exception
     def save_workspace(self):

@@ -1,3 +1,6 @@
+import csv
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, call
 
 from bigsheets.adapters.sheets.sheets import SheetsAdaptor
@@ -32,10 +35,23 @@ class TestSheets:
         session = engine_factory()
         with session:
             session.execute("create table s1(x numeric)")
-            session.execute('insert into s1 values(1)')
+            session.execute("insert into s1 values(1)")
             session.commit()
         # Close session and open a new one
         new_session = engine_factory()
         with new_session:
-            result = tuple(new_session.execute('select * from s1'))
+            result = tuple(new_session.execute("select * from s1"))
             assert result[0][0] == 1
+
+    def test_export_view(self, engine_factory):
+        session = engine_factory()
+        with session, tempfile.NamedTemporaryFile(mode='w+') as fp:
+            session.execute("create table s1(x numeric, y numeric)")
+            session.execute('insert into s1 values("foo", "bar")')
+            SheetsAdaptor(session).export_view("select * from s1", Path(fp.name))
+            fp.seek(0)
+            reader = csv.reader(fp)
+            headers = next(reader)
+            assert headers == ["x", "y"]
+            row = next(reader)
+            assert row == ["foo", "bar"]

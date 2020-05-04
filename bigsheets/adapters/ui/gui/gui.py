@@ -13,7 +13,6 @@ import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.domain import command, model
 from bigsheets.service import message_bus, read_model, running
-
 # noinspection PyUnresolvedReferences
 from . import utils
 from .view import View
@@ -102,6 +101,7 @@ class Window:
     ):
         self.reader: read_model.ReadModel = ui.reader
         self._view = View(self.reader, None, ui, self, ui.bus)
+        self.bus = ui.bus
         self.webview: pywebview = ui.webview
         self.native_window = self.webview.create_window(
             "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
@@ -120,12 +120,7 @@ class Window:
         self._view.ctrl = self.ctrl
 
     def ask_user_for_sheet(self) -> t.Optional[Path]:
-        r = self.native_window.create_file_dialog(
-            self.webview.OPEN_DIALOG,
-            allow_multiple=False,
-            file_types=("CSV (*.csv;*.tsv)",),
-        )
-        return Path(r[0]) if r else None
+        return self._file_dialog(save=False)
 
     def start_opening_sheet(self, sheet: model.Sheet):
         self.ctrl.progress.start_processing(sheet.num_rows)
@@ -168,3 +163,15 @@ class Window:
     def _on_close(self):
         # todo properly remove the window and view, etc from ram
         pass
+
+    def export_view(self, query: str):
+        if filepath := self._file_dialog(save=True):
+            self.bus.handle(command.ExportView(query, filepath))
+
+    def _file_dialog(self, *, save: bool) -> t.Optional[Path]:
+        r = self.native_window.create_file_dialog(
+            self.webview.SAVE_DIALOG if save else self.webview.OPEN_DIALOG,
+            allow_multiple=False,
+            file_types=("CSV (*.csv;*.tsv)",),
+        )
+        return Path(r[0]) if r else None
