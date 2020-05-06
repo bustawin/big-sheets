@@ -1,10 +1,13 @@
 import csv
+import io
+import json
 import tempfile
+import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, call
 
 from bigsheets.adapters.sheets.sheets import SheetsAdaptor
-from bigsheets.domain import event
+from bigsheets.domain import model
 from test.conftest import FIXTURES
 
 
@@ -20,7 +23,6 @@ class TestSheets:
         assert sheet.name == "sheet1"
         assert sheet.num_rows == 128
         assert sheet.rows
-        assert isinstance(sheet.events[0], event.SheetOpened)
 
         # Check callbacks
         # todo change with mock_calls
@@ -45,7 +47,7 @@ class TestSheets:
 
     def test_export_view(self, engine_factory):
         session = engine_factory()
-        with session, tempfile.NamedTemporaryFile(mode='w+') as fp:
+        with session, tempfile.NamedTemporaryFile(mode="w+") as fp:
             session.execute("create table s1(x numeric, y numeric)")
             session.execute('insert into s1 values("foo", "bar")')
             SheetsAdaptor(session).export_view("select * from s1", Path(fp.name))
@@ -55,3 +57,89 @@ class TestSheets:
             assert headers == ["x", "y"]
             row = next(reader)
             assert row == ["foo", "bar"]
+
+    def test_save_workspace(self, engine_factory, MockedSheetsAdaptor):
+        session = engine_factory()
+
+        with session, tempfile.NamedTemporaryFile(mode="wb+") as fp:
+            session.execute("create table s1(x numeric, y numeric)")
+            session.execute('insert into s1 values("foo", "bar")')
+            sheet = model.Sheet(
+                "s1", [], header=["x", "y"], num_rows=1, filename="foo.bar"
+            )
+            MockedSheetsAdaptor.sheets.add(sheet)
+            initial = MagicMock()
+            callback = MagicMock()
+            MockedSheetsAdaptor(session).save_workspace(
+                ["select * from s1", "select x from s1"],
+                Path(fp.name),
+                initial,
+                callback,
+            )
+            fp.seek(0)
+            with zipfile.ZipFile(fp) as z:
+                with z.open("info.json") as info:
+                    i = json.load(info)
+                with z.open("s1") as s1_csv:
+                    reader = csv.reader(io.TextIOWrapper(s1_csv))
+                    assert list(reader) == [["foo", "bar"]]
+            assert i == {
+                "queries": ["select * from s1", "select x from s1"],
+                "sheets": [
+                    {
+                        "rows": [],
+                        "name": "s1",
+                        "wrongs": [],
+                        "num_rows": 1,
+                        "header": ["x", "y"],
+                        "filename": "foo.bar",
+                    }
+                ],
+            }
+            initial.assert_called_once_with(MockedSheetsAdaptor.sheets)
+            callback.assert_not_called()  # Only calls every 10th row
+
+    def test_load_workspace(self, engine_factory, MockedSheetsAdaptor):
+        session = engine_factory()
+
+        with session, tempfile.NamedTemporaryFile(mode="wb+") as fp:
+            with zipfile.ZipFile(fp, mode="w") as z:
+                z.writestr("s1", "foo,bar")
+                z.writestr(
+                    "info.json",
+                    json.dumps(
+                        {
+                            "queries": ["select * from s1", "select x from s1"],
+                            "sheets": [
+                                {
+                                    "rows": [],
+                                    "name": "s1",
+                                    "wrongs": ["foo"],
+                                    "num_rows": 1,
+                                    "header": ["x", "y"],
+                                    "filename": "foo.bar",
+                                }
+                            ],
+                        }
+                    ),
+                )
+            fp.seek(0)
+            initial = MagicMock()
+            callback = MagicMock()
+            ret = MockedSheetsAdaptor(session).load_workspace(
+                Path(fp.name), initial, callback
+            )
+            assert len(MockedSheetsAdaptor.sheets) == 1
+            sheet = next(iter(MockedSheetsAdaptor.sheets))
+            assert sheet.name == "s1"
+            assert sheet.wrongs == ["foo"]
+            assert sheet.rows == []
+            assert sheet.header == ["x", "y"]
+            assert sheet.filename == "foo.bar"
+
+            rows = tuple(session.execute("select * from s1"))
+            assert rows == (("foo", "bar"),)
+
+            initial.assert_called_once_with(MockedSheetsAdaptor.sheets)
+            callback.assert_called_once_with(499)
+            assert ret == ["select * from s1", "select x from s1"]

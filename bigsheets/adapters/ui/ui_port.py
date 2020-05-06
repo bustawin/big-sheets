@@ -7,6 +7,8 @@ from pathlib import Path
 from bigsheets.domain import model
 from bigsheets.service import read_model
 
+Sheets = t.Collection[model.Sheet]
+
 
 class UIPort(abc.ABC):
     """The primary actor for the user interface using the presenter
@@ -35,7 +37,7 @@ class UIPort(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def sheet_opened(self, *opened_sheets: model.Sheet):
+    def sheet_opened(self, opened_sheets: model.Sheet):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -44,4 +46,39 @@ class UIPort(abc.ABC):
 
     @abc.abstractmethod
     def open_sheet(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def save_workspace(self):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def start_saving_workspace(self, sheets: Sheets):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_saving_workspace(self, quantity: int):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def finish_saving_workspace(self):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def start_loading_workspace(self, sheets: Sheets):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_loading_workspace(self, quantity):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def finish_loading_workspace(self, queries: t.Collection[str]):
+        """"""
         raise NotImplementedError

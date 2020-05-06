@@ -17,18 +17,18 @@ class ReadModel:
     uow: unit_of_work.UnitOfWork
 
     def query(
-        self, q: str, limit: int, page: int
+        self, q: str, limit: int = 100, page: int = 0
     ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
         with self.uow.instantiate() as uowi:
             for row in self._query(q, limit, page, uowi.session):
                 yield row
 
-    def query_default_last_sheet(self):
+    def q_default_last_sheet(self):
         with self.uow.instantiate() as uowi:
             sheet_name = f"sheet{uowi.sheets.number_of_sheets()}"
             q = f"SELECT * FROM {sheet_name}"
-            yield sheet_name
-            yield self._query(q, 50, 0, uowi.session)
+            for row in self._query(q, 100, 0, uowi.session):
+                yield row
 
     def _query(
         self, q: str, limit: int, page: int, session: sqlite3.Connection

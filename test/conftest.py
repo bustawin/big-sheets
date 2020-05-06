@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 import webview as pywebview
 
-from bigsheets.adapters.sheets.sheets import EngineFactory
+from bigsheets.adapters.sheets.sheets import EngineFactory, SheetsAdaptor
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.adapters.ui.gui.gui import GUIAdapter
 
@@ -49,3 +49,11 @@ def gui():
             on_loaded()
 
     return MockedGUIAdapter, native_window
+
+
+@pytest.fixture
+def MockedSheetsAdaptor():
+    class TestSheetsAdaptor(SheetsAdaptor):
+        sheets = set()  # So we don't contaminate other tests
+
+    return TestSheetsAdaptor

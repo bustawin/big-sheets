@@ -22,7 +22,7 @@ class Sheet:
         """
         self.name: str = name
         """The name of the sheet, which is the name of the table too."""
-        self.wrongs: Rows
+        self.wrongs: Rows = []
         self.events: t.Deque[event.Event] = deque()
         self.num_rows: int = num_rows
         """The rows the sheet has, including wrong ones,
@@ -30,9 +30,6 @@ class Sheet:
          """
         self.header: Row = header
         self.filename = filename
-
-    def opened(self, opened_sheets: t.Collection[Sheet]):
-        self.events.append(event.SheetOpened(self, opened_sheets))
 
     def __str__(self):
         return f"Sheet {self.name}"

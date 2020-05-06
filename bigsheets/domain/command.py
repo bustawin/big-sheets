@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import typing as t
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,4 +32,15 @@ class RemoveSheet(Command):
 @dataclass
 class ExportView(Command):
     query: str
+    filepath: Path
+
+
+@dataclass
+class SaveWorkspace(Command):
+    queries: t.Collection[str, ...]
+    filepath: Path
+
+
+@dataclass
+class LoadWorkspace(Command):
     filepath: Path

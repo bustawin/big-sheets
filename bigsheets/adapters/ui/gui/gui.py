@@ -13,10 +13,11 @@ import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.domain import command, model
 from bigsheets.service import message_bus, read_model, running
+
 # noinspection PyUnresolvedReferences
 from . import utils
 from .view import View
-from ..ui_port import UIPort
+from ..ui_port import Sheets, UIPort
 
 
 class GUIAdapter(UIPort):
@@ -50,8 +51,8 @@ class GUIAdapter(UIPort):
         self.windows[-1].update_sheet_opening(completed)
 
     def sheet_opened(self, *opened_sheets: model.Sheet):
-        self.windows[-1].sheet_opened()
         for window in self.windows:
+            window.sheet_opened()
             window.set_open_sheets(*opened_sheets)
 
     def sheet_removed(self, *sheet: model.Sheet):
@@ -69,21 +70,65 @@ class GUIAdapter(UIPort):
         # starting in a separate thread
         Thread(target=on_loaded, name="bootstrap").start()
 
-    def open_window(self, init_with_sheet=True):
+    def open_window(self):
         """Opens a new window showing the table of """
         ev = threading.Event()
         window = Window(self, self.handle_closing_window, lambda: ev.set())
         ev.wait()
         self.windows.append(window)
-        if init_with_sheet:
-            window.init_with_sheet()
         return window
 
     def open_sheet(self):
-        window = self.open_window(init_with_sheet=False)
+        window = self.open_window()
         if not self.bus.handle(command.AskUserForASheet()):
             window.close()
             self.handle_closing_window(window)
+
+    # Saving workspace
+
+    def save_workspace(self):
+        if filepath := self.windows[0].file_dialog(save=True):
+            # todo should we take this in "start_saving_workspace?"
+            queries = tuple(w.query for w in self.windows)
+            self.bus.handle(command.SaveWorkspace(queries, filepath))
+
+    def start_saving_workspace(self, sheets: Sheets):
+        total = max(sheet.num_rows for sheet in sheets)
+        for window in self.windows:
+            window.start_blocking_process(
+                total, "Some functionality is disabled until the workspace is saved."
+            )
+
+    def update_saving_workspace(self, quantity: int):
+        for window in self.windows:
+            window.update_blocking_process(quantity)
+
+    def finish_saving_workspace(self):
+        for window in self.windows:
+            window.finish_blocking_process()
+
+    def start_loading_workspace(self, sheets: Sheets):
+        total = max(sheet.num_rows for sheet in sheets)
+        self.windows[0].start_blocking_process(
+            total, "Functionality is disabled until the workspace is loaded."
+        )
+
+    def update_loading_workspace(self, quantity):
+        self.windows[0].update_blocking_process(quantity)
+
+    def finish_loading_workspace(self, queries: t.Collection[str]):
+        first_query = True
+        for query in queries:
+            if first_query:
+                first_query = False
+                self.windows[0].init_with_query(query)
+                self.windows[0].finish_blocking_process()
+            else:
+                ev = threading.Event()
+                window = Window(self, self.handle_closing_window, lambda: ev.set())
+                ev.wait()
+                self.windows.append(window)
+                window.init_with_query(query)
 
 
 class Window:
@@ -119,8 +164,12 @@ class Window:
         )
         self._view.ctrl = self.ctrl
 
+    @property
+    def query(self):
+        return self.ctrl.query.query
+
     def ask_user_for_sheet(self) -> t.Optional[Path]:
-        return self._file_dialog(save=False)
+        return self.file_dialog(save=False)
 
     def start_opening_sheet(self, sheet: model.Sheet):
         self.ctrl.progress.start_processing(sheet.num_rows)
@@ -140,14 +189,20 @@ class Window:
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
 
-    def init_with_sheet(self):
-        r = self.reader.query_default_last_sheet()
-        sheet_name = next(r)
-        res = next(r)
-        headers = next(res)
-        results = tuple(res)
+    def init_with_query(self, query: t.Optional[str] = None):
+        """ Initializes the window and executes the passed-in query.
+        :param query: The query whose resulsts to show in the table.
+                      If None, use a predefined query over the last
+                      sheet.
+        :return:
+        """
+        r = self.reader.query(query) if query else self.reader.q_default_last_sheet()
+        headers = next(r)
+        results = tuple(r)
         self.ctrl.table.set(results, headers)
-        self.ctrl.query.init(sheet_name, headers)
+        self.ctrl.query.init(
+            "sheet1", headers
+        )  # todo change by the name of all sheets!
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
         self.set_open_sheets(*self.reader.opened_sheets())
@@ -165,13 +220,28 @@ class Window:
         pass
 
     def export_view(self, query: str):
-        if filepath := self._file_dialog(save=True):
+        if filepath := self.file_dialog(save=True):
             self.bus.handle(command.ExportView(query, filepath))
 
-    def _file_dialog(self, *, save: bool) -> t.Optional[Path]:
+    def file_dialog(self, *, save: bool) -> t.Optional[Path]:
         r = self.native_window.create_file_dialog(
             self.webview.SAVE_DIALOG if save else self.webview.OPEN_DIALOG,
             allow_multiple=False,
-            file_types=("CSV (*.csv;*.tsv)",),
+            file_types=("CSV and BigSheets (*.bsw;*.csv;*.tsv)",),
         )
         return Path(r[0]) if r else None
+
+    def start_blocking_process(self, total: int, info: str):
+        self.ctrl.nav.disable()
+        self.ctrl.query.disable()
+        self.ctrl.info.set(info)
+        self.ctrl.progress.start_processing(total)
+
+    def update_blocking_process(self, quantity: int):
+        self.ctrl.progress.update(quantity)
+
+    def finish_blocking_process(self):
+        self.ctrl.progress.finish()
+        self.ctrl.nav.enable()
+        self.ctrl.query.enable()
+        self.ctrl.info.unset()

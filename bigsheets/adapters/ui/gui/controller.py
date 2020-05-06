@@ -63,6 +63,10 @@ class Query(Controller):
     def disable(self):
         self._exec(self.disable)
 
+    @property
+    def query(self) -> str:
+        return self.window.evaluate_js("query.query")
+
 
 class Nav(Controller):
     variable = "nav"

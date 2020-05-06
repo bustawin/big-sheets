@@ -33,11 +33,13 @@ def test_open_csv(gui, engine_factory):
     # Check the native window was instantiated and asked for a file dialog
     native_window.create_file_dialog.assert_called_once()
     # Check it started processing
-    assert calls[4] == mock.call.Progress().start_processing(128)
-    assert calls[5] == mock.call.Info().set("Opening...")
-    assert calls[6][0] == "Table().set"
-    assert len(calls[6].args[0]) == 49
-    assert calls[6].args[1] == [
+    assert calls[6] == mock.call.Progress().start_processing(128)
+    assert calls[7] == mock.call.Info().set(
+        "Some functionality is disabled until the sheet finishes opening."
+    )
+    assert calls[8][0] == "Table().set"
+    assert len(calls[8].args[0]) == 49
+    assert calls[8].args[1] == [
         "cities",
         "LatM",
         "LatS",
@@ -49,7 +51,7 @@ def test_open_csv(gui, engine_factory):
         "City",
         "State",
     ]
-    assert calls[7] == mock.call.Query().init(
+    assert calls[9] == mock.call.Query().init(
         "sheet1",
         [
             "cities",
@@ -64,9 +66,9 @@ def test_open_csv(gui, engine_factory):
             "State",
         ],
     )
-    assert calls[10] == mock.call.Progress().finish()
+    assert calls[13] == mock.call.Progress().finish()
     # todo why not table?
-    assert calls[11] == mock.call.Info().unset()
+    assert calls[14] == mock.call.Info().unset()
 
 
 class TestQuery:

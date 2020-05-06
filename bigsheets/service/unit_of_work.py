@@ -5,7 +5,7 @@ import typing as t
 from dataclasses import dataclass
 
 from bigsheets.adapters.sheets import sheets
-from bigsheets.domain import model as m
+from bigsheets.domain import event, model as m
 from bigsheets.service.message_bus import MessageBus
 
 
@@ -38,7 +38,7 @@ class UnitOfWorkInstance:
     session: sqlite3.Connection
     sheets: sheets.SheetsPort
 
-    def commit(self, *models: m.ModelWithEvent):
+    def commit(self, *models: t.Union[m.ModelWithEvent, event.Event]):
         """Commit and, after, submit the events."""
         self.session.commit()
         _handle(*models, bus=self.bus)
@@ -53,7 +53,10 @@ class UnitOfWorkInstance:
         self.session.close()
 
 
-def _handle(*models: m.ModelWithEvent, bus: MessageBus):
-    for model in models:
-        while model.events:
-            bus.handle(model.events.popleft())
+def _handle(*model_or_event: t.Union[m.ModelWithEvent, event.Event], bus: MessageBus):
+    for me in model_or_event:
+        if hasattr(me, "events"):
+            while me.events:
+                bus.handle(me.events.popleft())
+        else:
+            bus.handle(me)

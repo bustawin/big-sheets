@@ -48,7 +48,8 @@ class View:
 
     @print_exception
     def open_window(self):
-        self.ui.open_window()
+        window = self.ui.open_window()
+        window.init_with_query()
 
     @print_exception
     def remove_sheet(self, name: str):
@@ -64,4 +65,4 @@ class View:
 
     @print_exception
     def save_workspace(self):
-        raise NotImplementedError
+        self.ui.save_workspace()
