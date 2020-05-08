@@ -1,4 +1,4 @@
-function startEditor (sheetName, headers) {
+function startEditor (sheetName, headers, darkMode) {
   // Only way for our ace package to get to these variables
   window._bigsheetEditor = {headers, sheetName}
 
@@ -8,7 +8,7 @@ function startEditor (sheetName, headers) {
     maxLines: 20
   })
   queryEditor.renderer.setScrollMargin(2, 2, 2, 2)
-  queryEditor.setTheme('ace/theme/xcode')
+  queryEditor.setTheme(darkMode ? 'ace/theme/dracula' : 'ace/theme/xcode')
   queryEditor.session.setMode('ace/mode/sql-bigsheet')
   queryEditor.setOptions({
     enableLiveAutocompletion: true,

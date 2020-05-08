@@ -87,7 +87,7 @@ class Table {
     }
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
-      const domRow = this.el.insertRow()
+      const domRow = this.el.tBodies[0].insertRow()
       domRow.innerHTML = `<th class="row">${i}</th>`
       for (let c of row) {
         const domCell = domRow.insertCell()
@@ -143,7 +143,7 @@ class Query {
   init (sheetName, headers) {
     // Init this after setting the table
     console.log(sheetName, headers)
-    this.queryEditor = startEditor(sheetName, headers)
+    this.queryEditor = startEditor(sheetName, headers, darkMode)
     this._queryForm.hidden = false
   }
 
@@ -276,6 +276,8 @@ class SheetsButton {
     pywebview.api.remove_sheet(name)
   }
 }
+
+const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
 
 window.progress = new Progress()
 window.info = new Info()

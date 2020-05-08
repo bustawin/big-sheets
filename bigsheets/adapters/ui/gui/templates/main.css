@@ -95,14 +95,20 @@ td {
 th {
     background-color: rgb(190, 192, 191);
 }
+@media (prefers-color-scheme: dark) {
+    th {
+        background-color: rgb(25, 25, 25);
+    }
+    td{
+        border: 1px solid rgb(82, 82, 82);
+    }
+}
 
 th.col {
     position: sticky;
     top: 0;
 }
 
-th.row {
-}
 
 th.col div {
     resize: horizontal;

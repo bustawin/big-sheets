@@ -13,6 +13,12 @@
     margin-top: -1px;
 }
 
+@media (prefers-color-scheme: dark) {
+    #query-editor {
+        background: linear-gradient(to top, rgb(40, 40, 40), rgb(50, 50, 50));
+    }
+}
+
 .ace_variable {
     color: blueviolet !important;
 }
