@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 import typing as t
 from dataclasses import dataclass
@@ -19,6 +20,8 @@ from . import utils
 from .view import View
 from ..ui_port import Sheets, UIPort
 
+log = logging.getLogger(__name__)
+
 
 class GUIAdapter(UIPort):
     webview: pywebview = pywebview
@@ -32,6 +35,7 @@ class GUIAdapter(UIPort):
     def start(self, on_loaded: callable):
         # todo should on_loaded be an event?
         assert not self.windows
+        log.info("Creating window %s", len(self.windows))
         self.windows.append(
             Window(
                 self,
@@ -73,6 +77,7 @@ class GUIAdapter(UIPort):
     def open_window(self):
         """Opens a new window showing the table of """
         ev = threading.Event()
+        log.info("Creating window %s", len(self.windows))
         window = Window(self, self.handle_closing_window, lambda: ev.set())
         ev.wait()
         self.windows.append(window)
@@ -153,6 +158,7 @@ class Window:
         )
         self.native_window.closing += partial(on_closing, self)
         self.native_window.closed += self._on_close
+        self.native_window.loaded += lambda: log.info("Window created and loaded.")
         self.native_window.loaded += on_loaded
         self.ctrl = self.Ctrl(
             ui.ctrl.Progress(self.native_window),

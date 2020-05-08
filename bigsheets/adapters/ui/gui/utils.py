@@ -1,5 +1,6 @@
 # Fixes being stuck when closing the window while JS is running
 import json
+import logging
 import threading
 
 import AppKit
@@ -10,6 +11,8 @@ from webview.localization import localization
 from webview.platforms import cocoa
 
 import bigsheets.service.utils
+
+log = logging.getLogger(__name__)
 
 #####
 # Fixes being able to close the window pressing the 'x'
@@ -141,3 +144,20 @@ def create_file_dialog(self, dialog_type, directory, allow_multiple, save_filena
 
 
 cocoa.BrowserView.create_file_dialog = create_file_dialog
+
+
+#####
+# Manages opening files
+#####
+
+
+class ApplicationDelegate(AppKit.NSObject):
+    def application_openFile_(self, application, fileName):
+        log.debug('Passed-in file is %s', fileName)
+        # todo handle file
+        return Foundation.YES
+
+
+cocoa.BrowserView.app.setDelegate_(ApplicationDelegate.alloc().init().retain())
+# Drag-and-drop event (ex. file from finder dragged-in window) is handled in
+# BrowserView.webView_decidePolicyForNavigationAction_decisionHandler_

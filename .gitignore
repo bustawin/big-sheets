@@ -5,3 +5,7 @@ __pycache__
 .idea
 .pytest_cache
 *.pyi
+build
+dist
+assets/*.iconset
+.eggs

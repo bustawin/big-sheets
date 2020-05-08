@@ -11,7 +11,6 @@ from itertools import chain
 from pathlib import Path
 
 import more_itertools
-import pydantic
 import zipstream
 
 from bigsheets.adapters.sheets.file import CSVFile
@@ -205,7 +204,7 @@ class SheetsAdaptor(SheetsPort):
 
         info = {
             "queries": tuple(queries),
-            "sheets": [ExportSheet.from_orm(sheet).dict() for sheet in self.sheets],
+            "sheets": [self._export_sheet(sheet) for sheet in self.sheets],
         }
         zip.writestr("info.json", json.dumps(info).encode())
         with filepath.open("wb") as file:
@@ -247,17 +246,17 @@ class SheetsAdaptor(SheetsPort):
                         callback(rows_opened)
         return i["queries"]
 
-
-class ExportSheet(pydantic.BaseModel):
-    rows: model.Rows
-    name: str
-    wrongs: model.Rows
-    num_rows: int
-    header: model.Row
-    filename: str
-
-    class Config:
-        orm_mode = True
+    def _export_sheet(self, sheet: model.Sheet):
+        # We cannot use pydantic because
+        # https://github.com/pyinstaller/pyinstaller/issues/4406
+        return {
+            "rows": sheet.rows,
+            "name": sheet.name,
+            "wrongs": sheet.wrongs,
+            "num_rows": sheet.num_rows,
+            "header": sheet.header,
+            "filename": sheet.filename,
+        }
 
 
 class FileLike:

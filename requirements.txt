@@ -1,0 +1,7 @@
+pywebview==3.2
+python-decouple==3.3
+punq==0.4.1
+zipstream_new==1.1.7
+more_itertools==8.2.0
+pytest==5.4.1
+pyinstaller==3.6

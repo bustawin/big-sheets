@@ -3,8 +3,6 @@ from __future__ import annotations
 import typing as t
 from collections import defaultdict
 
-import punq
-
 from bigsheets.adapters.sheets import sheets
 from bigsheets.adapters.ui import ui_port
 from bigsheets.adapters.ui.gui import gui
@@ -13,8 +11,10 @@ from bigsheets.service import (
     command_handlers,
     event_handlers,
     message_bus,
-    read_model, unit_of_work,
+    read_model,
+    unit_of_work,
 )
+from bigsheets.adapters.container import Container, Scope
 
 
 class BigSheets:
@@ -45,26 +45,26 @@ def bootstrap(
     engine_factory: callable,
     Uow: t.Type[unit_of_work.UnitOfWork] = unit_of_work.UnitOfWork,
     UI: t.Type[ui_port.UIPort] = gui.GUIAdapter,
-) -> punq.Container:
-    container = punq.Container()
-    container.register(read_model.ReadModel, scope=punq.Scope.singleton)
+) -> Container:
+    container = Container()
+    container.register(read_model.ReadModel, scope=Scope.singleton)
     container.register(
         unit_of_work.UnitOfWork,
         Uow,
-        scope=punq.Scope.singleton,
+        scope=Scope.singleton,
         sheet_engine_factory=engine_factory,
         Sheets=sheets.SheetsAdaptor,
     )
-    container.register(ui_port.UIPort, UI, scope=punq.Scope.singleton)
+    container.register(ui_port.UIPort, UI, scope=Scope.singleton)
     container.register(
-        message_bus.MessageBus, scope=punq.Scope.singleton,
+        message_bus.MessageBus, scope=Scope.singleton,
     )
     bootstrap_handlers("event_handlers", container, event_handlers.HANDLERS)
     bootstrap_handlers("command_handlers", container, command_handlers.HANDLERS)
     return container
 
 
-def bootstrap_handlers(name, container: punq.Container, origin):
+def bootstrap_handlers(name, container: Container, origin):
     """Registers the handlers in the containers so they can be
     used by the message bus.
     """

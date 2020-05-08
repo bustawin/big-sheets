@@ -18,3 +18,11 @@ bus for events has a threadpool of max 5 threads, bus for commands uses the same
 pywebview stays in the main thread running the event loop.
 pywebview creates a new thread per python call from the JS bridge -> command handler in bus (same thread as before)
 
+
+
+Generate icons
+==============
+
+Export the affinity designer using the export persona selecting the
+folder where the affinity designer file is.
+Then execute `make icons`, generating the files pyinstaller requires.

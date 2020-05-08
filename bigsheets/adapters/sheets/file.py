@@ -44,8 +44,7 @@ class CSVFile:
         sniffer = csv.Sniffer()
         line = self.f.readline()
         self.dialect = sniffer.sniff(line)
-        print(vars(self.dialect))
-        logging.info("File %s: dialect %s", self.path, self.dialect)
+        logging.info("File %s: dialect %s", self.path.name, vars(self.dialect))
         self.f.seek(0)
 
         self.reader = csv.reader(self.f, self.dialect)
