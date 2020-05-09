@@ -1,3 +1,4 @@
+import locale
 import logging
 import logging.config
 import logging.handlers
@@ -54,3 +55,25 @@ def setup_logging():
         "frozen" if frozen() else "not frozen",
         "in debug mode" if debug() else "in NON-debug mode",
     )
+
+    def log_unhandled_exceptions(*exc_info):
+        logging.exception("Unhandled exception:", exc_info=exc_info)
+
+    sys.excepthook = log_unhandled_exceptions
+
+
+def ensure_utf8():
+    """
+    Python3 uses by default the system set, but it expects it to be
+    ‘utf-8’ to work correctly.
+    This can generate problems in reading and writing files and in
+    ``.decode()`` method.
+
+    An example how to 'fix' it::
+
+        echo 'export LC_CTYPE=en_US.UTF-8' > .bash_profile
+        echo 'export LC_ALL=en_US.UTF-8' > .bash_profile
+    """
+    encoding = locale.getpreferredencoding()
+    if encoding.lower() != "utf-8":
+        raise OSError(f"Your encoding is {encoding}. Must be UTF-8")

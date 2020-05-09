@@ -238,6 +238,8 @@ class SheetsAdaptor(SheetsPort):
                 initial_callback(self.sheets)
             rows_opened = 0
             for sheet in self.sheets:
+                # todo Fails for multiple sheets because
+                #   https://bugs.python.org/issue40564
                 with CSVFile(
                     zipfile.Path(file, sheet.name), headers=sheet.header, binary=True
                 ) as csv_sheets:
