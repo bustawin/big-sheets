@@ -20,15 +20,13 @@ class ReadModel:
         self, q: str, limit: int = 100, page: int = 0
     ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
         with self.uow.instantiate() as uowi:
-            for row in self._query(q, limit, page, uowi.session):
-                yield row
+            yield from self._query(q, limit, page, uowi.session)
 
     def q_default_last_sheet(self):
         with self.uow.instantiate() as uowi:
             sheet_name = f"sheet{uowi.sheets.number_of_sheets()}"
             q = f"SELECT * FROM {sheet_name}"
-            for row in self._query(q, 100, 0, uowi.session):
-                yield row
+            yield from self._query(q, 100, 0, uowi.session)
 
     def _query(
         self, q: str, limit: int, page: int, session: sqlite3.Connection
@@ -37,8 +35,7 @@ class ReadModel:
 
         cursor: sqlite3.Cursor = session.execute(q)
         yield tuple(h[0] for h in cursor.description)
-        for row in cursor:
-            yield row
+        yield from cursor
 
     def opened_sheets(self):
         with self.uow.instantiate() as uowi:
