@@ -1,3 +1,7 @@
+/**
+   Apple values from https://github.com/WebKit/webkit/blob/master/Source/WebCore/css/CSSValueKeywords.in
+ */
+
 body {
     font-family: system-ui;
     color: WindowText;
@@ -89,7 +93,7 @@ main {
 td {
     padding: 0.25em 0.5em;
     margin: 0;
-    border: 1px solid rgb(210, 210, 210);
+    border: 1px solid -apple-system-grid;
 }
 
 th {
@@ -118,6 +122,13 @@ th.col div {
 
 th div {
     word-break: keep-all;
+}
+
+tbody>tr:nth-child(even){
+    background-color: -apple-system-even-alternating-content-background;
+}
+tbody>tr:nth-child(odd){
+    background-color: -apple-system-odd-alternating-content-background;
 }
 
 nav {

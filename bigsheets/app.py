@@ -25,7 +25,7 @@ class BigSheets:
     ):
         """Bootstraps the app."""
         self.container = bootstrap(UI=UI, engine_factory=engine_factory)
-        self.message_bus: message_bus.MessageBus = self.container.resolve(
+        self.bus: message_bus.MessageBus = self.container.resolve(
             message_bus.MessageBus
         )
         self.ui: ui_port.UIPort = self.container.resolve(ui_port.UIPort)
@@ -34,11 +34,11 @@ class BigSheets:
         self.ui.start(self._start_message_bus)
 
     def _start_message_bus(self):
-        self.message_bus.start(
+        self.bus.start(
             self.container.resolve("event_handlers"),
             self.container.resolve("command_handlers"),
         )
-        self.message_bus.handle(command.AskUserForASheet())
+        self.bus.handle(command.AskUserForASheet())
 
 
 def bootstrap(
