@@ -133,7 +133,7 @@ class SheetsAdaptor(SheetsPort):
         )
 
     def _create_table_q(self, table_name, headers: model.Row):
-        cols = (f"{name} NUMERIC" for name in headers)
+        cols = (f"'{name}' NUMERIC" for name in headers)
         return f"CREATE TABLE {table_name} ({','.join(cols)})"
 
     def _process_spreadsheet(self, f: CSVFile, table_name):
