@@ -159,5 +159,23 @@ class ApplicationDelegate(AppKit.NSObject):
 
 
 cocoa.BrowserView.app.setDelegate_(ApplicationDelegate.alloc().init().retain())
+
+
 # Drag-and-drop event (ex. file from finder dragged-in window) is handled in
 # BrowserView.webView_decidePolicyForNavigationAction_decisionHandler_
+
+
+#####
+# Use tabs instead of windows
+#####
+
+def init(self: cocoa.BrowserView, window):
+    super_init(self, window)
+    if not hasattr(self.__class__, "big_window"):
+        self.__class__.big_window = self.window
+    else:
+        self.__class__.big_window.addTabbedWindow_ordered_(self.window, 1)
+
+
+super_init = cocoa.BrowserView.__init__
+cocoa.BrowserView.__init__ = init
