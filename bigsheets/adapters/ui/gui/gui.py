@@ -156,8 +156,8 @@ class Window:
         self.native_window = self.webview.create_window(
             "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
         )
+        self.on_closing = on_closing
         self.native_window.closing += partial(on_closing, self)
-        self.native_window.closed += self._on_close
         self.native_window.loaded += lambda: log.info("Window created and loaded.")
         self.native_window.loaded += on_loaded
         self.ctrl = self.Ctrl(
@@ -219,11 +219,8 @@ class Window:
         )
 
     def close(self):
-        self.native_window.destroy()  # Destroy does not trigger on_close
-
-    def _on_close(self):
-        # todo properly remove the window and view, etc from ram
-        pass
+        self.on_closing(self)
+        self.native_window.destroy()  # Destroy does not trigger closing, etc.
 
     def export_view(self, query: str):
         if filepath := self.file_dialog(save=True):

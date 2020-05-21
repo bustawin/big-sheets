@@ -52,6 +52,10 @@ class View:
         window.init_with_query()
 
     @print_exception
+    def close_window(self):
+        self.window.close()
+
+    @print_exception
     def remove_sheet(self, name: str):
         self.bus.handle(command.RemoveSheet(name))
 

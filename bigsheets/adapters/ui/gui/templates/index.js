@@ -1,10 +1,3 @@
-/**
- * @param {string[][]} sheet
- */
-function setSampleSheet (sheet) {
-  console.log(sheet)
-}
-
 class Progress {
   constructor () {
     /**
@@ -91,11 +84,10 @@ class Table {
       domRow.innerHTML = `<th class="row">${i}</th>`
       for (let c of row) {
         const domCell = domRow.insertCell()
-        domCell.innerHTML = `<div>${c}</div>`
+        domCell.innerHTML = `${c}`
       }
     }
   }
-
 }
 
 class Query {
@@ -142,7 +134,6 @@ class Query {
 
   init (sheetName, headers) {
     // Init this after setting the table
-    console.log(sheetName, headers)
     this.queryEditor = startEditor(sheetName, headers, darkMode)
     this._queryForm.hidden = false
   }
@@ -151,7 +142,6 @@ class Query {
     if (this._disabled) throw Error('Cannot query while disabled.')
     if (resetPage) this.page = 0
     this.message.innerText = ''
-    console.log(this.query)
     pywebview.api.query(this.query, this.limit, this.page)
   }
 
@@ -201,7 +191,6 @@ class Nav {
      */
     this._openWindowBtn = document.getElementById('open-window')
     this._openWindowBtn.onclick = () => {
-      console.log('fooobar')
       pywebview.api.open_window()
     }
     this._sheetsBtn = document.getElementById('sheets-button')
@@ -290,5 +279,14 @@ window.sheetsButton = new SheetsButton()
  * @type {HTMLDivElement}
  */
 
-
-
+document.onkeypress = function (e) {
+  const ctrl = e.metaKey || e.ctrlKey
+  if (ctrl && e.key === 't') {  // ctrl/cmd + t = new tab
+    e.preventDefault()
+    pywebview.api.open_window()
+  }
+  if (ctrl && e.key === 'w') { // ctrl/cmd + w = close tab
+    e.preventDefault()
+    pywebview.api.close_window()
+  }
+}

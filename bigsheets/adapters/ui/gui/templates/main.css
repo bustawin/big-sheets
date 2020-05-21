@@ -67,7 +67,7 @@ main {
 }
 
 #table {
-    table-layout: auto;
+    table-layout:auto;
     border-collapse: collapse;
     position: relative;
     min-width: 99.9%;
@@ -77,17 +77,21 @@ main {
     -ms-user-select: auto;
 }
 
-#table input, table div {
+#table input{
     margin: 0;
     padding: 0;
     background-color: transparent;
     font-size: 100%;
     border: none;
-    word-break: break-word;
+
 }
 
-#table td * {
-    min-width: 5em;
+#table td {
+    min-width: 3em;
+    max-width: 40em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 td {
@@ -186,6 +190,7 @@ footer {
     border: 0.5px solid rgb(185, 185, 185);
     border-radius: 8px;
     box-shadow: -8px 8px 35px 2px rgba(150, 150, 150, 1);
+    max-width: initial !important; /* tippy applies an ugly max-width */
 }
 
 .tippy-box[data-theme~='ours'][data-placement^='bottom'] > .tippy-arrow::before {
