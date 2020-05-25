@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import csv
+import io
 import json
 import logging
 import sqlite3
@@ -108,7 +109,8 @@ class SheetsAdaptor(SheetsPort):
     def open_sheet(
         self, filepath: Path, initial_callback: callable, callback: callable,
     ) -> model.Sheet:
-        with CSVFile(filepath) as file:
+        with filepath.open() as f:
+            file = CSVFile(f)
             table_name = model.new_sheet_name(self.number_of_sheets())
             sheet = model.Sheet(
                 table_name,
@@ -238,11 +240,8 @@ class SheetsAdaptor(SheetsPort):
                 initial_callback(self.sheets)
             rows_opened = 0
             for sheet in self.sheets:
-                # todo Fails for multiple sheets because
-                #   https://bugs.python.org/issue40564
-                with CSVFile(
-                    zipfile.Path(file, sheet.name), headers=sheet.header, binary=True
-                ) as csv_sheets:
+                with file.open(sheet.name) as inner:
+                    csv_sheets = CSVFile(io.TextIOWrapper(inner), headers=sheet.header)
                     for _ in self._process_spreadsheet(csv_sheets, sheet.name):
                         rows_opened += self.rows_per_chunk(csv_sheets.num_cells)
                         callback(rows_opened)
