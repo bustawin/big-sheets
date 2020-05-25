@@ -1,15 +1,16 @@
-function startEditor (sheetName, headers, darkMode) {
+/**
+ * Initiates the query editor.
+ * @param {string} sheetName - The name of the sheet to open.
+ * @param {boolean} darkMode - Whether to use dark or light editor modes.
+ */
+function startEditor (sheetName, darkMode) {
   // Only way for our ace package to get to these variables
-  window._bigsheetEditor = {headers, sheetName}
-
-  // Init editor
   const queryEditor = ace.edit('query-editor', {
     autoScrollEditorIntoView: true,
     maxLines: 20
   })
   queryEditor.renderer.setScrollMargin(2, 2, 2, 2)
   queryEditor.setTheme(darkMode ? 'ace/theme/dracula' : 'ace/theme/xcode')
-  queryEditor.session.setMode('ace/mode/sql-bigsheet')
   queryEditor.setOptions({
     enableLiveAutocompletion: true,
     showLineNumbers: false,
@@ -27,6 +28,17 @@ function startEditor (sheetName, headers, darkMode) {
     exec: () => window.query.submitQuery(),
     readOnly: true // false if this command should not apply in readOnly mode
   })
+  /**
+   * Sets the highlighter and completions with the passed-in vars, plus
+   * the pre-defined SQL ones (removing other vars previously set
+   * with this method, but not the pre-defined SQL ones).
+   * @param {string[]} vars
+   */
+  queryEditor.setVariables = (vars = []) => {
+    queryEditor.session.setMode({path: 'ace/mode/sql-bigsheet', variables: vars})
+  }
+  queryEditor.setVariables()
   return queryEditor
 }
+
 window.startEditor = startEditor

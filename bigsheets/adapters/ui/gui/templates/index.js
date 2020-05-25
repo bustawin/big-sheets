@@ -134,7 +134,7 @@ class Query {
 
   init (sheetName, headers) {
     // Init this after setting the table
-    this.queryEditor = startEditor(sheetName, headers, darkMode)
+    this.queryEditor = startEditor(sheetName, darkMode)
     this._queryForm.hidden = false
   }
 
@@ -159,6 +159,16 @@ class Query {
 
   disable () {
     this._disabled = this._limit.disabled = this._page.disabled = this._queryFormSubmit.disabled = true
+  }
+
+  /**
+   * Sets the opened sheets to the query editor keywords.
+   * @param {Object.<string, string[]>} sheets
+   */
+  setOpenedSheets (sheets) {
+    this.queryEditor.setVariables(
+      [...Object.keys(sheets), ...Object.values(sheets).flat()]
+    )
   }
 
   get query () {

@@ -6,14 +6,14 @@ ace.define('ace/mode/sql-bigsheet', ['require', 'exports', 'module', 'ace/lib/oo
     var SqlHighlightRules = require('./sql_highlight_rules').SqlHighlightRules
 
     class MyNewHighlightRules extends SqlHighlightRules {
-      constructor () {
+      constructor ({variables}) {
         super()
         const old = this.$rules.start[6].token
         const oldList = this.$keywordList
 
         const newKeyWordMapper = this.createKeywordMapper({
           'variable': (
-            `${window._bigsheetEditor.sheetName}|${window._bigsheetEditor.headers.join('|')}`
+            variables.join('|')
           )
         }, 'identifier', true)
         this.$varList = this.$keywordList
@@ -24,12 +24,12 @@ ace.define('ace/mode/sql-bigsheet', ['require', 'exports', 'module', 'ace/lib/oo
           return t === 'identifier' ? newKeyWordMapper(v) : t
         }
       }
-
     }
 
     class Mode extends SqlMode {
-      constructor () {
+      constructor ({path, variables}) {
         super()
+        this.$highlightRuleConfig = {variables}
         this.HighlightRules = MyNewHighlightRules
         this.$behaviour = this.$defaultBehaviour
       }
@@ -39,7 +39,7 @@ ace.define('ace/mode/sql-bigsheet', ['require', 'exports', 'module', 'ace/lib/oo
           name: word,
           value: word,
           score: 1,
-          meta: word === window._bigsheetEditor.sheetName ? 'Name of this sheet' : 'Column in this sheet'
+          meta: 'Column/sheet name'
         })).concat(super.getCompletions(...args))
       }
 

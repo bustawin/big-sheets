@@ -22,3 +22,12 @@
 .ace_variable {
     color: blueviolet !important;
 }
+
+.ace_autocomplete {
+    font-family: system-ui;
+    background: Window !important;
+    color: WindowText;
+    border: 1px solid rgb(185, 185, 185);
+    border-radius: 8px;
+    box-shadow: -8px 8px 35px 2px rgba(150, 150, 150, 1);
+}

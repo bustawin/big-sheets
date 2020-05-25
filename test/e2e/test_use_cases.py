@@ -51,21 +51,7 @@ def test_open_csv(gui, engine_factory):
         "City",
         "State",
     ]
-    assert calls[9] == mock.call.Query().init(
-        "sheet1",
-        [
-            "cities",
-            "LatM",
-            "LatS",
-            "NS",
-            "Lon D",
-            "Lon M",
-            "LonS",
-            "EW",
-            "City",
-            "State",
-        ],
-    )
+    assert calls[9] == mock.call.Query().init("sheet1")
     assert calls[13] == mock.call.Progress().finish()
     # todo why not table?
     assert calls[14] == mock.call.Info().unset()

@@ -183,7 +183,7 @@ class Window:
             "Some functionality is disabled until the sheet finishes opening."
         )
         self.ctrl.table.set(sheet.rows, sheet.header)
-        self.ctrl.query.init(sheet.name, sheet.header)
+        self.ctrl.query.init(sheet.name)
         self.ctrl.query.disable()
 
     def update_sheet_opening(self, completed: int):
@@ -216,6 +216,9 @@ class Window:
     def set_open_sheets(self, *sheets: model.Sheet):
         self.ctrl.sheets_button.set(
             [{"name": sheet.name, "filename": sheet.filename} for sheet in sheets]
+        )
+        self.ctrl.query.set_opened_sheets(
+            {sheet.name: sheet.header for sheet in sheets}
         )
 
     def close(self):

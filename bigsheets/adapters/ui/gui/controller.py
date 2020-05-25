@@ -51,8 +51,8 @@ class Table(Controller):
 class Query(Controller):
     variable = "query"
 
-    def init(self, sheet_name: str, headers: t.List[str]):
-        self._exec(self.init, sheet_name, headers)
+    def init(self, sheet_name: str):
+        self._exec(self.init, sheet_name)
 
     def set_message(self, message: str):
         self._exec("setMessage", message)
@@ -62,6 +62,9 @@ class Query(Controller):
 
     def disable(self):
         self._exec(self.disable)
+
+    def set_opened_sheets(self, sheets: t.Dict[str, t.List[str]]):
+        self._exec("setOpenedSheets", sheets)
 
     @property
     def query(self) -> str:
