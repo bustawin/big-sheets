@@ -15,7 +15,6 @@ import bigsheets.service.utils
 from bigsheets.adapters.ui.gui import controller
 from bigsheets.domain import command, model
 from bigsheets.service import message_bus, read_model, running
-
 # noinspection PyUnresolvedReferences
 from . import utils
 from .view import View
@@ -176,8 +175,16 @@ class Window:
     def query(self):
         return self.ctrl.query.query
 
+    @property
+    def title(self):
+        return self.native_window.title
+
+    @title.setter
+    def title(self, value):
+        self.native_window.set_title(value)
+
     def ask_user_for_sheet(self) -> t.Optional[Path]:
-        return self.file_dialog(save=False)
+        return self.file_dialog()
 
     def start_opening_sheet(self, sheet: model.Sheet):
         self.ctrl.progress.start_processing(sheet.num_rows)

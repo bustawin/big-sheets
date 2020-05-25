@@ -34,6 +34,7 @@ class View:
 
     @print_exception
     def query(self, query: str, limit, page):
+        self.window.title = query
         try:
             r = self.reader.query(query, limit, page)
             headers = next(r)
