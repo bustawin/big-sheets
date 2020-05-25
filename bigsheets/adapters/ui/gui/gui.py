@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 import typing as t
+from contextlib import suppress
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -64,7 +65,8 @@ class GUIAdapter(UIPort):
             window.set_open_sheets(*sheet)
 
     def handle_closing_window(self, window: Window):
-        self.windows.remove(window)
+        with suppress(ValueError):
+            self.windows.remove(window)
         if not self.windows:
             running.exit()
 
@@ -92,7 +94,7 @@ class GUIAdapter(UIPort):
     # Saving workspace
 
     def save_workspace(self):
-        if filepath := self.windows[0].file_dialog(save=True):
+        if filepath := self.windows[0].file_dialog(save="workspace.bsw"):
             # todo should we take this in "start_saving_workspace?"
             queries = tuple(w.query for w in self.windows)
             self.bus.handle(command.SaveWorkspace(queries, filepath))
@@ -206,9 +208,7 @@ class Window:
         headers = next(r)
         results = tuple(r)
         self.ctrl.table.set(results, headers)
-        self.ctrl.query.init(
-            "sheet1"
-        )  # todo change by the name of all sheets!
+        self.ctrl.query.init("sheet1")  # todo change by the name of all sheets!
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
         self.set_open_sheets(*self.reader.opened_sheets())
@@ -226,13 +226,17 @@ class Window:
         self.native_window.destroy()  # Destroy does not trigger closing, etc.
 
     def export_view(self, query: str):
-        if filepath := self.file_dialog(save=True):
+        if filepath := self.file_dialog(save="sheet.csv"):
             self.bus.handle(command.ExportView(query, filepath))
 
-    def file_dialog(self, *, save: bool) -> t.Optional[Path]:
+    def file_dialog(self, *, save: t.Optional[str] = None) -> t.Optional[Path]:
+        """Creates an open file dialog if save is falsy, and a save dialog when
+        save is a string with an exemplifying filename.
+        """
         r = self.native_window.create_file_dialog(
             self.webview.SAVE_DIALOG if save else self.webview.OPEN_DIALOG,
             allow_multiple=False,
+            save_filename=save,
             file_types=("CSV and BigSheets (*.bsw;*.csv;*.tsv)",),
         )
         return Path(r[0]) if r else None
