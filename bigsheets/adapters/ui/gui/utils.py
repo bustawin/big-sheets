@@ -166,15 +166,20 @@ cocoa.BrowserView.app.setDelegate_(ApplicationDelegate.alloc().init().retain())
 
 
 #####
-# Use tabs instead of windows
+# Use tabs instead of windows AND allow zoom
 #####
 
 def init(self: cocoa.BrowserView, window):
     super_init(self, window)
+
+    # Tabs instead of windows
     if not hasattr(self.__class__, "big_window"):
         self.__class__.big_window = self.window
     else:
         self.__class__.big_window.addTabbedWindow_ordered_(self.window, 1)
+
+    # Allow zoom
+    self.webkit.setAllowsMagnification_(Foundation.YES)
 
 
 super_init = cocoa.BrowserView.__init__

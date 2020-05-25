@@ -207,7 +207,7 @@ class Window:
         results = tuple(r)
         self.ctrl.table.set(results, headers)
         self.ctrl.query.init(
-            "sheet1", headers
+            "sheet1"
         )  # todo change by the name of all sheets!
         self.ctrl.nav.enable()
         self.ctrl.query.enable()

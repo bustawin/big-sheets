@@ -291,12 +291,16 @@ window.sheetsButton = new SheetsButton()
 
 document.onkeypress = function (e) {
   const ctrl = e.metaKey || e.ctrlKey
-  if (ctrl && e.key === 't') {  // ctrl/cmd + t = new tab
+  if (ctrl && (e.key === 't' || e.key === 'n')) {  // ctrl/cmd + t/n = new tab
     e.preventDefault()
     pywebview.api.open_window()
   }
   if (ctrl && e.key === 'w') { // ctrl/cmd + w = close tab
     e.preventDefault()
     pywebview.api.close_window()
+  }
+  if (ctrl && e.key === 'o') { // ctrl/cmd + o = open csv
+    e.preventDefault()
+    pywebview.api.open_sheet()
   }
 }
