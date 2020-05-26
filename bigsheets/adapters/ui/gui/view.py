@@ -71,3 +71,7 @@ class View:
     @print_exception
     def save_workspace(self):
         self.ui.save_workspace()
+
+    @print_exception
+    def open_warnings(self):
+        self.ui.open_warnings_window()

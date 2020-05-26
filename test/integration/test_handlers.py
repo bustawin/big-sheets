@@ -7,10 +7,10 @@ from bigsheets.service.unit_of_work import UnitOfWork
 from test.conftest import FIXTURES
 
 
-def test_open_sheet(engine_factory, MockedSheetsAdaptor):
+def test_open_sheet(engine_factory, MockedSheetsAdaptor, MockedErrorsAdapter):
     bus = MagicMock()
     uow = UnitOfWork(sheet_engine_factory=engine_factory, bus=bus,
-                     Sheets=MockedSheetsAdaptor)
+                     Sheets=MockedSheetsAdaptor, errors=MockedErrorsAdapter())
     os = OpenSheet(uow, MagicMock())
     cmd = command.OpenSheet(FIXTURES / "cities.csv")
     sheet = os(cmd)

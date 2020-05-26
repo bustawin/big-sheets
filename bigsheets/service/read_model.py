@@ -39,4 +39,8 @@ class ReadModel:
 
     def opened_sheets(self):
         with self.uow.instantiate() as uowi:
-            return uowi.sheets.get()
+            yield from uowi.sheets.get()
+
+    def errors(self):
+        with self.uow.instantiate() as uowi:
+            return uowi.errors.get()

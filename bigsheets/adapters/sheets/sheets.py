@@ -16,6 +16,7 @@ import zipstream
 
 from bigsheets.adapters.sheets.file import CSVFile
 from bigsheets.domain import model
+from bigsheets.domain import error as error_model
 from bigsheets.service import running
 
 
@@ -52,7 +53,7 @@ class SheetsPort(abc.ABC):
     @abc.abstractmethod
     def open_sheet(
         self, filepath: Path, initial_callback: callable, callback: callable,
-    ) -> model.Sheet:
+    ) -> t.Tuple[model.Sheet, t.List[error_model.WrongRow]]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -108,7 +109,7 @@ class SheetsAdaptor(SheetsPort):
 
     def open_sheet(
         self, filepath: Path, initial_callback: callable, callback: callable,
-    ) -> model.Sheet:
+    ) -> t.Tuple[model.Sheet, t.List[error_model.WrongRow]]:
         with filepath.open() as f:
             file = CSVFile(f)
             table_name = model.new_sheet_name(self.number_of_sheets())
@@ -122,12 +123,16 @@ class SheetsAdaptor(SheetsPort):
             self.sheets.add(sheet)
             initial_callback(sheet)
             num_opened = 0
+            wrong_rows = []
             for wrongs in self._process_spreadsheet(file, table_name):
                 running.exit_if_asked()
-                sheet.wrongs.extend(wrongs)
+                wrong_rows.extend(
+                    error_model.WrongRow(sheet.filename, sheet.name, wrong)
+                    for wrong in wrongs
+                )
                 num_opened += self.rows_per_chunk(file.num_cells)
                 callback(sheet, num_opened)
-        return sheet
+        return sheet, wrong_rows
 
     def number_of_sheets(self) -> int:
         return more_itertools.ilen(
@@ -235,7 +240,6 @@ class SheetsAdaptor(SheetsPort):
                         num_rows=s["num_rows"],
                         filename=s["filename"],
                     )
-                    sheet.wrongs = s["wrongs"]
                     self.sheets.add(sheet)
                 initial_callback(self.sheets)
             rows_opened = 0
@@ -253,7 +257,6 @@ class SheetsAdaptor(SheetsPort):
         return {
             "rows": sheet.rows,
             "name": sheet.name,
-            "wrongs": sheet.wrongs,
             "num_rows": sheet.num_rows,
             "header": sheet.header,
             "filename": sheet.filename,

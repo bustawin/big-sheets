@@ -45,6 +45,14 @@ class Info {
   unset () {
     this.el.innerHTML = ''
   }
+
+  setWarnings () {
+    this.set(`There were some warnings opening sheets. <button id="warnings-button">Review them</button>`)
+    const warningsBtn = document.getElementById('warnings-button')
+    warningsBtn.onclick = () => {
+      pywebview.api.open_warnings()
+    }
+  }
 }
 
 class Table {

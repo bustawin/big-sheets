@@ -40,6 +40,9 @@ class Info(Controller):
     def unset(self):
         self._exec(self.unset)
 
+    def set_warnings(self):
+        self._exec("setWarnings")
+
 
 class Table(Controller):
     variable = "table"

@@ -13,7 +13,10 @@ FIXTURES = Path(__file__).parent.parent / "fixtures"
 @pytest.fixture
 def uow(engine_factory):
     return unit_of_work.UnitOfWork(
-        sheet_engine_factory=engine_factory, bus=MagicMock(), Sheets=MagicMock()
+        sheet_engine_factory=engine_factory,
+        bus=MagicMock(),
+        Sheets=MagicMock(),
+        errors=MagicMock(),
     )
 
 

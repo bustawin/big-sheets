@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, Mock, call
 
 from bigsheets.adapters.sheets.sheets import SheetsAdaptor
 from bigsheets.domain import model
+from bigsheets.domain.error import WrongRow
 from test.conftest import FIXTURES
 
 
@@ -16,13 +17,14 @@ class TestSheets:
         e = engine_factory()
         initial_callback: Mock = MagicMock()
         callback = MagicMock()
-        sheet = SheetsAdaptor(e).open_sheet(
+        sheet, errors = SheetsAdaptor(e).open_sheet(
             FIXTURES / "cities.csv", initial_callback, callback
         )
         # Check sheet object
         assert sheet.name == "sheet1"
         assert sheet.num_rows == 128
         assert sheet.rows
+        assert not errors
 
         # Check callbacks
         # todo change with mock_calls
@@ -32,6 +34,20 @@ class TestSheets:
         # Check db
         x = e.execute("SELECT * FROM sheet1 LIMIT 1")
         assert next(x) == (41, 5, 59, "N", 80, 39, 0, "W", "Youngstown", "OH")
+
+    def test_open_sheet_wrong_rows(self, engine_factory):
+        e = engine_factory()
+        initial_callback: Mock = MagicMock()
+        callback = MagicMock()
+        sheet, errors = SheetsAdaptor(e).open_sheet(
+            FIXTURES / "cities-wrong.csv", initial_callback, callback
+        )
+        assert len(errors) == 1
+        e = errors[0]
+        assert e.filename.endswith('cities-wrong.csv')
+        assert e.sheet_name == 'sheet1'
+        assert e.row == ['41', '5', '59', 'N', '80', '39', '0', 'W', 'Youngstown']
+        assert isinstance(e, WrongRow)
 
     def test_engine_persistance(self, engine_factory):
         session = engine_factory()
@@ -89,7 +105,6 @@ class TestSheets:
                     {
                         "rows": [],
                         "name": "s1",
-                        "wrongs": [],
                         "num_rows": 1,
                         "header": ["x", "y"],
                         "filename": "foo.bar",
@@ -114,7 +129,6 @@ class TestSheets:
                                 {
                                     "rows": [],
                                     "name": "s1",
-                                    "wrongs": ["foo"],
                                     "num_rows": 1,
                                     "header": ["x", "y"],
                                     "filename": "foo.bar",
@@ -132,7 +146,6 @@ class TestSheets:
             assert len(MockedSheetsAdaptor.sheets) == 1
             sheet = next(iter(MockedSheetsAdaptor.sheets))
             assert sheet.name == "s1"
-            assert sheet.wrongs == ["foo"]
             assert sheet.rows == []
             assert sheet.header == ["x", "y"]
             assert sheet.filename == "foo.bar"

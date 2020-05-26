@@ -173,6 +173,9 @@ def init(self: cocoa.BrowserView, window):
     super_init(self, window)
 
     # Tabs instead of windows
+    if self.title == "Warnings — BigSheets":
+        return
+
     if not hasattr(self.__class__, "big_window"):
         self.__class__.big_window = self.window
     else:

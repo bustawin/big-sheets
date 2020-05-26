@@ -27,6 +27,7 @@ setup(
         "punq",
         "zipstream_new",
         "more_itertools",
+        "ordered-set-37"
     ],
     extras_require={"test": test_requires, "build": ["pyinstaller"]},
     tests_require=test_requires,

@@ -11,7 +11,7 @@ def test_commit_happy_path():
     engine = lambda: mock.create_autospec(sqlite3.Connection)
     bus = MagicMock()
     Sheets = MagicMock()
-    uow = UnitOfWork(engine, bus, Sheets)
+    uow = UnitOfWork(engine, bus, Sheets, MagicMock())
     with uow.instantiate() as uowi:
         session = uowi.session
 

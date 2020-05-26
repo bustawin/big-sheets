@@ -30,9 +30,10 @@ class OpenSheet(Handler):
 
     def __call__(self, message: command.OpenSheet):
         with self.uow.instantiate() as uow:
-            sheet = uow.sheets.open_sheet(
+            sheet, wrong_rows = uow.sheets.open_sheet(
                 message.filepath, self.initial_callback, self.callback,
             )
+            uow.errors.add(*wrong_rows)
             uow.commit(event.SheetOpened(sheet, tuple(uow.sheets.get())))
         return sheet
 

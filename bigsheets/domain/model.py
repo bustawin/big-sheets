@@ -4,6 +4,7 @@ import typing as t
 from collections import deque
 
 from . import event
+from .error import WrongRow
 
 Cell = t.Union[int, float, str, None]
 Cells = Row = Column = t.List[Cell]
@@ -22,7 +23,6 @@ class Sheet:
         """
         self.name: str = name
         """The name of the sheet, which is the name of the table too."""
-        self.wrongs: Rows = []
         self.events: t.Deque[event.Event] = deque()
         self.num_rows: int = num_rows
         """The rows the sheet has, including wrong ones,

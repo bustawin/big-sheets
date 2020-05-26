@@ -57,3 +57,12 @@ def MockedSheetsAdaptor():
         sheets = set()  # So we don't contaminate other tests
 
     return TestSheetsAdaptor
+
+
+from bigsheets.adapters.error import error as error_adapter
+
+
+@pytest.fixture
+def MockedErrorsAdapter():
+    # No need to mock
+    return error_adapter.ErrorAdapter

@@ -17,7 +17,7 @@ from bigsheets.domain import command, model
 from bigsheets.service import message_bus, read_model, running
 # noinspection PyUnresolvedReferences
 from . import utils
-from .view import View
+from .view import View, print_exception
 from ..ui_port import Sheets, UIPort
 
 log = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ class GUIAdapter(UIPort):
         super().__init__(reader)
         self.windows: t.List[Window] = []
         self.bus = bus
+        self.warnings_window: t.Optional[WarningsWindow] = None
 
     def start(self, on_loaded: callable):
         # todo should on_loaded be an event?
@@ -136,6 +137,13 @@ class GUIAdapter(UIPort):
                 self.windows.append(window)
                 window.init_with_query(query)
 
+    def open_warnings_window(self):
+        if not self.warnings_window:
+            self.warnings_window = WarningsWindow(self, self._on_closing_warnings_window)
+
+    def _on_closing_warnings_window(self):
+        self.warnings_window = None
+
 
 class Window:
     @dataclass
@@ -155,7 +163,7 @@ class Window:
         self.bus = ui.bus
         self.webview: pywebview = ui.webview
         self.native_window = self.webview.create_window(
-            "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
+            "BigSheets", "adapters/ui/gui/templates/index.html", js_api=self._view
         )
         self.on_closing = on_closing
         self.native_window.closing += partial(on_closing, self)
@@ -200,7 +208,7 @@ class Window:
 
     def sheet_opened(self):
         self.ctrl.progress.finish()
-        self.ctrl.info.unset()
+        self.unset_info()
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
 
@@ -244,7 +252,7 @@ class Window:
             self.webview.SAVE_DIALOG if save else self.webview.OPEN_DIALOG,
             allow_multiple=False,
             save_filename=save,
-            file_types=("CSV and BigSheets (*.bsw;*.csv;*.tsv)",),
+            file_types=("CSV and BigSheets (*.bsw;*.csv;*.tsv;*.tab)",),
         )
         return Path(r[0]) if r else None
 
@@ -261,4 +269,35 @@ class Window:
         self.ctrl.progress.finish()
         self.ctrl.nav.enable()
         self.ctrl.query.enable()
-        self.ctrl.info.unset()
+        self.unset_info()
+
+    def unset_info(self):
+        if self.reader.errors():
+            self.ctrl.info.set_warnings()
+        else:
+            self.ctrl.info.unset()
+
+
+class WarningsWindow:
+    def __init__(self, ui: GUIAdapter, on_closing: callable):
+        self.webview: pywebview = ui.webview
+        self.native_window = self.webview.create_window(
+            "Warnings — BigSheets",
+            "adapters/ui/gui/templates/warnings/warnings.html",
+            js_api=self.View(ui.reader),
+        )
+        self.native_window.closing += on_closing
+
+    def restore(self):
+        self.native_window.restore()
+
+    @dataclass
+    class View:
+        reader: read_model.ReadModel
+
+        @print_exception
+        def errors(self):
+            return {
+                k: [e.dict() for e in errors]
+                for k, errors in self.reader.errors().items()
+            }
