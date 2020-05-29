@@ -163,7 +163,7 @@ class Window:
         self.bus = ui.bus
         self.webview: pywebview = ui.webview
         self.native_window = self.webview.create_window(
-            "BigSheets", "adapters/ui/gui/web-files/index.html", js_api=self._view
+            "BigSheets", "adapters/ui/gui/web-files/query/index.html", js_api=self._view
         )
         self.on_closing = on_closing
         self.native_window.closing += partial(on_closing, self)
