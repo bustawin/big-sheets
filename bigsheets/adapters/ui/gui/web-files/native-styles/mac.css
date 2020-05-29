@@ -1,0 +1,83 @@
+@import './main.css';
+
+/**
+   Apple values from https://github.com/WebKit/webkit/blob/master/Source/WebCore/css/CSSValueKeywords.in
+ */
+
+:root {
+    --dialog-border: 0.5px solid rgb(185, 185, 185);
+    --dialog-shadow: -8px 8px 35px 2px rgba(150, 150, 150, 1);
+    --dialog-border-radius: 8px;
+    /* For non-native inputs */
+    --input-border-radius: 5px;
+    --input-background: linear-gradient(to top, rgb(241, 241, 241), rgb(255, 255, 255));
+    --input-border: 0.5px solid rgb(213, 213, 213);
+    --input-box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --input-background: linear-gradient(to top, rgb(40, 40, 40), rgb(50, 50, 50));
+    }
+}
+
+/** nav */
+.nav-button {
+    font-size: 75%;
+    display: inline-block;
+    text-align: center;
+    padding: 0.25em
+}
+
+.nav-button * {
+    padding: 0
+}
+
+.nav-button > button:nth-child(2) {
+    margin-left: -7px
+}
+
+#nav-right {
+    float: right;
+}
+
+
+
+.nav-button {
+    --nav-height: 2.5em;
+    --nav-width: 4em;
+}
+
+.nav-button button, .nav-button input {
+    -webkit-appearance: color-well;
+    height: var(--nav-height);
+    width: var(--nav-width);
+    text-align: center;
+}
+
+
+/** tables */
+td {
+    border: 1px solid -apple-system-grid;
+}
+
+th {
+    background-color: rgb(190, 192, 191);
+}
+
+@media (prefers-color-scheme: dark) {
+    th {
+        background-color: rgb(25, 25, 25);
+    }
+
+    td {
+        border: 1px solid rgb(82, 82, 82);
+    }
+}
+
+tbody > tr:nth-child(even) {
+    background-color: -apple-system-even-alternating-content-background;
+}
+
+tbody > tr:nth-child(odd) {
+    background-color: -apple-system-odd-alternating-content-background;
+}

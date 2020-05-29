@@ -1,0 +1,15 @@
+:root {
+    color-scheme: light dark;
+}
+
+
+body {
+    font-family: system-ui;
+    color: WindowText;
+    background-color: Window;
+    margin: 0;
+    position: fixed;
+    overflow: hidden;
+}
+
+

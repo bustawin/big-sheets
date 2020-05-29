@@ -2,8 +2,9 @@
  * Initiates the query editor.
  * @param {string} sheetName - The name of the sheet to open.
  * @param {boolean} darkMode - Whether to use dark or light editor modes.
+ * @param {function} onSubmit - Callback to execute when user submits the editor.
  */
-function startEditor (sheetName, darkMode) {
+function startEditor (sheetName, darkMode, onSubmit) {
   // Only way for our ace package to get to these variables
   const queryEditor = ace.edit('query-editor', {
     autoScrollEditorIntoView: true,
@@ -25,7 +26,7 @@ function startEditor (sheetName, darkMode) {
   queryEditor.commands.addCommand({
     name: 'submit-query',
     bindKey: {win: 'Ctrl-Return', mac: 'Command-Return'},
-    exec: () => window.query.submitQuery(),
+    exec: onSubmit,
     readOnly: true // false if this command should not apply in readOnly mode
   })
   /**

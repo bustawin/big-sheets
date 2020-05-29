@@ -142,7 +142,7 @@ class Query {
 
   init (sheetName, headers) {
     // Init this after setting the table
-    this.queryEditor = startEditor(sheetName, darkMode)
+    this.queryEditor = startEditor(sheetName, darkMode, () => this.submitQuery())
     this._queryForm.hidden = false
   }
 

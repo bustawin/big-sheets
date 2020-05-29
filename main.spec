@@ -6,7 +6,7 @@ a = Analysis(
     ['bigsheets/main.py'],
     pathex=['/Users/bustawin/Documents/repos/bigsheet'],
     binaries=[],
-    datas=[('bigsheets/adapters/ui/gui/templates', 'adapters/ui/gui/templates')],
+    datas=[('bigsheets/adapters/ui/gui/web-files', 'adapters/ui/gui/web-files')],
     hiddenimports=[
         # Fixes https://github.com/pypa/setuptools/issues/1963#issuecomment-610829709
         "pkg_resources.py2_warn"
