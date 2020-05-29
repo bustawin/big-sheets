@@ -1,4 +1,8 @@
-
+body {
+    margin: 0;
+    position: fixed;
+    overflow: hidden;
+}
 
 
 .sheets-button-line {
@@ -89,8 +93,6 @@ nav {
     margin-left: 0.15em;
     margin-right: 0.15em
 }
-
-
 
 
 footer {

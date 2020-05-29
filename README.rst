@@ -1,6 +1,6 @@
 Bigsheet
 ########
-
+Installation requires a not-very-old node.
 
 This is an app with only one domain: Sheet. If we are
 to add more domains we should create a subfolder in bigsheet

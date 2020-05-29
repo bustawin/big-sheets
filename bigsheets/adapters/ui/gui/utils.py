@@ -166,7 +166,7 @@ cocoa.BrowserView.app.setDelegate_(ApplicationDelegate.alloc().init().retain())
 
 
 #####
-# Use tabs instead of windows AND allow zoom
+# Use tabs instead of windows AND allow zoom AND unsafe browser
 #####
 
 def init(self: cocoa.BrowserView, window):
@@ -183,6 +183,11 @@ def init(self: cocoa.BrowserView, window):
 
     # Allow zoom
     self.webkit.setAllowsMagnification_(Foundation.YES)
+
+    # Remove CORS, iframe check...
+    self.webkit.configuration().preferences().setValue_forKey_(
+        Foundation.NO, "webSecurityEnabled"
+    )
 
 
 super_init = cocoa.BrowserView.__init__

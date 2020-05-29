@@ -1,0 +1,16 @@
+{
+  "name": "web-files",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./query/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.13.0",
+    "ace-builds": "^1.4.11",
+    "tippy.js": "^6.2.3"
+  }
+}

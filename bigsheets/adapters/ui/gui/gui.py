@@ -283,7 +283,7 @@ class WarningsWindow:
         self.webview: pywebview = ui.webview
         self.native_window = self.webview.create_window(
             "Warnings — BigSheets",
-            "adapters/ui/gui/templates/warnings/warnings.html",
+            "adapters/ui/gui/web-files/warnings/warnings.html",
             js_api=self.View(ui.reader),
         )
         self.native_window.closing += on_closing
