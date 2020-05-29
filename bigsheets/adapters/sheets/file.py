@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import io
 import logging
 import subprocess
 import typing as t

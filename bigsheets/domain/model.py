@@ -4,7 +4,6 @@ import typing as t
 from collections import deque
 
 from . import event
-from .error import WrongRow
 
 Cell = t.Union[int, float, str, None]
 Cells = Row = Column = t.List[Cell]

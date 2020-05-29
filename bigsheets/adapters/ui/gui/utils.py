@@ -2,6 +2,7 @@
 import json
 import logging
 import threading
+from functools import wraps
 
 import AppKit
 import Foundation
@@ -192,3 +193,16 @@ def init(self: cocoa.BrowserView, window):
 
 super_init = cocoa.BrowserView.__init__
 cocoa.BrowserView.__init__ = init
+
+
+def log_exception(f):
+    """Logs exceptions and re-arises them."""
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+            raise
+
+    return wrapped

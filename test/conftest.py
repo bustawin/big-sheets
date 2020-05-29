@@ -6,7 +6,7 @@ import pytest
 import webview as pywebview
 
 from bigsheets.adapters.sheets.sheets import EngineFactory, SheetsAdaptor
-from bigsheets.adapters.ui.gui import controller
+from bigsheets.adapters.ui.gui.query import controller
 from bigsheets.adapters.ui.gui.gui import GUIAdapter
 
 DIR = Path(__file__).parent

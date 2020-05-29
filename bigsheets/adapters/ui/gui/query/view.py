@@ -7,32 +7,21 @@ from functools import wraps
 
 from bigsheets.domain import command
 from bigsheets.service import message_bus, read_model
-from . import gui
-
+from bigsheets.adapters.ui.gui import gui, utils as gui_utils
+from . import query_window, controller
 log = logging.getLogger(__name__)
 
-
-def print_exception(f):
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            logging.exception(e)
-            raise
-
-    return wrapped
 
 
 @dataclass
 class View:
     reader: read_model.ReadModel
-    ctrl: gui.Window.Ctrl
+    ctrl: query_window.QueryWindow.Ctrl
     ui: gui.GUIAdapter
-    window: gui.Window
+    window: query_window.QueryWindow
     bus: message_bus.MessageBus
 
-    @print_exception
+    @gui_utils.log_exception
     def query(self, query: str, limit, page):
         self.window.title = query
         try:
@@ -47,31 +36,31 @@ class View:
         else:
             self.ctrl.table.set(results, headers)
 
-    @print_exception
+    @gui_utils.log_exception
     def open_window(self):
         window = self.ui.open_window()
         window.init_with_query()
 
-    @print_exception
+    @gui_utils.log_exception
     def close_window(self):
         self.window.close()
 
-    @print_exception
+    @gui_utils.log_exception
     def remove_sheet(self, name: str):
         self.bus.handle(command.RemoveSheet(name))
 
-    @print_exception
+    @gui_utils.log_exception
     def open_sheet(self):
         self.ui.open_sheet()
 
-    @print_exception
+    @gui_utils.log_exception
     def export_view(self, query: str):
         self.window.export_view(query)
 
-    @print_exception
+    @gui_utils.log_exception
     def save_workspace(self):
         self.ui.save_workspace()
 
-    @print_exception
+    @gui_utils.log_exception
     def open_warnings(self):
         self.ui.open_warnings_window()

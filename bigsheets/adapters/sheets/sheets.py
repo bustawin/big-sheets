@@ -15,8 +15,7 @@ import more_itertools
 import zipstream
 
 from bigsheets.adapters.sheets.file import CSVFile
-from bigsheets.domain import model
-from bigsheets.domain import error as error_model
+from bigsheets.domain import error as error_model, model
 from bigsheets.service import running
 
 
