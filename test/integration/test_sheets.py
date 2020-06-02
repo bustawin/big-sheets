@@ -4,21 +4,28 @@ import json
 import tempfile
 import zipfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, call
+from unittest import mock
+from unittest.mock import MagicMock, call
 
-from bigsheets.adapters.sheets.sheets import SheetsAdaptor
+import pytest
+
+from bigsheets.adapters.sheets.sheets import SheetsAdaptor, UpdateHandler
 from bigsheets.domain import model
 from bigsheets.domain.error import WrongRow
 from test.conftest import FIXTURES
 
 
 class TestSheets:
-    def test_open_sheet(self, engine_factory):
+    @pytest.fixture
+    def update_handler(self):
+        UOSH = mock.create_autospec(UpdateHandler)
+        return UOSH()
+
+    def test_open_sheet(self, engine_factory, update_handler):
         e = engine_factory()
-        initial_callback: Mock = MagicMock()
-        callback = MagicMock()
+
         sheet, errors = SheetsAdaptor(e).open_sheet(
-            FIXTURES / "cities.csv", initial_callback, callback
+            FIXTURES / "cities.csv", update_handler=update_handler
         )
         # Check sheet object
         assert sheet.name == "sheet1"
@@ -27,20 +34,17 @@ class TestSheets:
         assert not errors
 
         # Check callbacks
-        # todo change with mock_calls
-        initial_callback.assert_called_once_with(sheet)
-        callback.assert_has_calls([call(sheet, 99), call(sheet, 198)])
+        update_handler.on_init.assert_called_once_with(sheet)
+        update_handler.on_it.assert_has_calls([call(99), call(99)])
 
         # Check db
         x = e.execute("SELECT * FROM sheet1 LIMIT 1")
         assert next(x) == (41, 5, 59, "N", 80, 39, 0, "W", "Youngstown", "OH")
 
-    def test_open_sheet_wrong_rows(self, engine_factory):
+    def test_open_sheet_wrong_rows(self, engine_factory, update_handler):
         e = engine_factory()
-        initial_callback: Mock = MagicMock()
-        callback = MagicMock()
         sheet, errors = SheetsAdaptor(e).open_sheet(
-            FIXTURES / "cities-wrong.csv", initial_callback, callback
+            FIXTURES / "cities-wrong.csv", update_handler=update_handler
         )
         assert len(errors) == 1
         e = errors[0]
@@ -74,7 +78,7 @@ class TestSheets:
             row = next(reader)
             assert row == ["foo", "bar"]
 
-    def test_save_workspace(self, engine_factory, MockedSheetsAdaptor):
+    def test_save_workspace(self, engine_factory, MockedSheetsAdaptor, update_handler):
         session = engine_factory()
 
         with session, tempfile.NamedTemporaryFile(mode="wb+") as fp:
@@ -84,13 +88,10 @@ class TestSheets:
                 "s1", [], header=["x", "y"], num_rows=1, filename="foo.bar"
             )
             MockedSheetsAdaptor.sheets.add(sheet)
-            initial = MagicMock()
-            callback = MagicMock()
             MockedSheetsAdaptor(session).save_workspace(
                 ["select * from s1", "select x from s1"],
                 Path(fp.name),
-                initial,
-                callback,
+                update_handler=update_handler
             )
             fp.seek(0)
             with zipfile.ZipFile(fp) as z:
@@ -111,10 +112,10 @@ class TestSheets:
                     }
                 ],
             }
-            initial.assert_called_once_with(MockedSheetsAdaptor.sheets)
-            callback.assert_not_called()  # Only calls every 10th row
+            update_handler.on_init.assert_called_once_with(MockedSheetsAdaptor.sheets)
+            update_handler.on_it.assert_called_once_with(1)
 
-    def test_load_workspace(self, engine_factory, MockedSheetsAdaptor):
+    def test_load_workspace(self, engine_factory, MockedSheetsAdaptor, update_handler):
         session = engine_factory()
 
         with session, tempfile.NamedTemporaryFile(mode="wb+") as fp:
@@ -138,10 +139,8 @@ class TestSheets:
                     ),
                 )
             fp.seek(0)
-            initial = MagicMock()
-            callback = MagicMock()
             ret = MockedSheetsAdaptor(session).load_workspace(
-                Path(fp.name), initial, callback
+                Path(fp.name), update_handler=update_handler
             )
             assert len(MockedSheetsAdaptor.sheets) == 1
             sheet = next(iter(MockedSheetsAdaptor.sheets))
@@ -153,6 +152,6 @@ class TestSheets:
             rows = tuple(session.execute("select * from s1"))
             assert rows == (("foo", "bar"),)
 
-            initial.assert_called_once_with(MockedSheetsAdaptor.sheets)
-            callback.assert_called_once_with(499)
+            update_handler.on_init.assert_called_once_with(MockedSheetsAdaptor.sheets)
+            update_handler.on_it.assert_called_once_with(499)
             assert ret == ["select * from s1", "select x from s1"]

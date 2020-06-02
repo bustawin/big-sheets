@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import typing as t
+
+from bigsheets.adapters.sheets import sheets as sheets_adapter
 from bigsheets.adapters.ui import ui_port
-from bigsheets.domain import command, event
+from bigsheets.domain import command, event, model
 from bigsheets.service import message_bus, unit_of_work
 from bigsheets.service.handler import Handler, Handlers
 
@@ -24,6 +27,19 @@ class OpenSheetSelector(Handler):
 class OpenSheet(Handler):
     HANDLES = {command.OpenSheet}
 
+    class Update(sheets_adapter.UpdateHandler):
+        def __init__(self, ui: ui_port.UIPort):
+            super().__init__()
+            self.ui = ui
+
+        def on_init(self, sheet: model.Sheet):
+            super().on_init(sheet)
+            self.ui.start_opening_sheet(sheet)
+
+        def on_it(self, n: int):
+            super().on_it(n)
+            self.ui.update_sheet_opening(self.total)
+
     def __init__(self, uow: unit_of_work.UnitOfWork, ui: ui_port.UIPort):
         self.uow = uow
         self.ui = ui
@@ -31,17 +47,11 @@ class OpenSheet(Handler):
     def __call__(self, message: command.OpenSheet):
         with self.uow.instantiate() as uow:
             sheet, wrong_rows = uow.sheets.open_sheet(
-                message.filepath, self.initial_callback, self.callback,
+                message.filepath, update_handler=self.Update(self.ui)
             )
             uow.errors.add(*wrong_rows)
             uow.commit(event.SheetOpened(sheet, tuple(uow.sheets.get())))
         return sheet
-
-    def initial_callback(self, sheets):
-        self.ui.start_opening_sheet(sheets)
-
-    def callback(self, sheet, quantity):
-        self.ui.update_sheet_opening(quantity)
 
 
 class RemoveSheet(Handler):
@@ -70,6 +80,21 @@ class ExportView(Handler):
 class SaveWorkspace(Handler):
     HANDLES = {command.SaveWorkspace}
 
+    class Update(sheets_adapter.UpdateHandler):
+        def __init__(self, ui: ui_port.UIPort):
+            super().__init__()
+            self.ui = ui
+
+        def on_init(self, sheet: t.Collection[model.Sheet]):
+            super().on_init(sheet)
+            self.ui.start_saving_workspace(sheet)
+
+        def on_it(self, n: int):
+            super().on_it(n)
+            if self.total % 10 == 0:
+                # Update progress every 10th row for performance
+                self.ui.update_saving_workspace(self.total)
+
     def __init__(self, uow: unit_of_work.UnitOfWork, ui: ui_port.UIPort):
         self.uow = uow
         self.ui = ui
@@ -77,19 +102,26 @@ class SaveWorkspace(Handler):
     def __call__(self, message: command.SaveWorkspace):
         with self.uow.instantiate() as uowi:
             uowi.sheets.save_workspace(
-                message.queries, message.filepath, self.initial_callback, self.callback
+                message.queries, message.filepath, update_handler=self.Update(self.ui)
             )
         self.ui.finish_saving_workspace()
-
-    def initial_callback(self, sheets):
-        self.ui.start_saving_workspace(sheets)
-
-    def callback(self, quantity):
-        self.ui.update_saving_workspace(quantity)
 
 
 class LoadWorkspace(Handler):
     HANDLES = {command.LoadWorkspace}
+
+    class Update(sheets_adapter.UpdateHandler):
+        def __init__(self, ui: ui_port.UIPort):
+            super().__init__()
+            self.ui = ui
+
+        def on_init(self, sheet: t.Collection[model.Sheet]):
+            super().on_init(sheet)
+            self.ui.start_loading_workspace(sheet)
+
+        def on_it(self, n: int):
+            super().on_it(n)
+            self.ui.update_loading_workspace(self.total)
 
     def __init__(self, uow: unit_of_work.UnitOfWork, ui: ui_port.UIPort):
         self.uow = uow
@@ -98,16 +130,10 @@ class LoadWorkspace(Handler):
     def __call__(self, message: command.LoadWorkspace):
         with self.uow.instantiate() as uowi:
             queries = uowi.sheets.load_workspace(
-                message.filepath, self.initial_callback, self.callback
+                message.filepath, update_handler=self.Update(self.ui)
             )
             uowi.commit()
         self.ui.finish_loading_workspace(queries)
-
-    def initial_callback(self, sheets):
-        self.ui.start_loading_workspace(sheets)
-
-    def callback(self, quantity):
-        self.ui.update_loading_workspace(quantity)
 
 
 HANDLERS: Handlers = {

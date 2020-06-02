@@ -114,3 +114,13 @@ def test_open_another_sheet():
     """Opens another sheet with a new window,
     and added into the sheet list.
     """
+
+
+@pytest.mark.skip(reason="Not developed.")
+def test_save_workspace():
+    pass
+
+
+@pytest.mark.skip(reason="Not developed.")
+def test_load_workspace():
+    pass
