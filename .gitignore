@@ -10,3 +10,4 @@ dist
 assets/*.iconset
 .eggs
 node_modules
+.coverage
