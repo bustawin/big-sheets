@@ -49,7 +49,11 @@ setup(
         "more_itertools",
         "ordered-set-37",
     ],
-    extras_require={"test": test_requires, "build": ["pyinstaller"]},
+    extras_require={
+        "test": test_requires,
+        "build": ["pyinstaller"],
+        "coverage": ["coverage"],
+    },
     tests_require=test_requires,
     setup_requires=["pytest-runner"],
     cmdclass={"develop": PostDevelopCommand, "install": PostInstallCommand},
