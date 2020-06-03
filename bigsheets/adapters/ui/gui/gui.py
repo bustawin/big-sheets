@@ -87,7 +87,7 @@ class GUIAdapter(UIPort):
 
     def open_sheet(self):
         window = self.open_window()
-        if not self.bus.handle(command.AskUserForASheet()):
+        if not self.bus.handle(command.AskUserForASheetOrWorkspace()):
             window.close()
             self.handle_closing_window(window)
 
@@ -138,6 +138,8 @@ class GUIAdapter(UIPort):
                 ev.wait()
                 self.windows.append(window)
                 window.init_with_query(query)
+
+    # Managing "Warnings" window
 
     def open_warnings_window(self):
         if not self.warnings_window:

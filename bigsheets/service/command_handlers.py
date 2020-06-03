@@ -10,13 +10,13 @@ from bigsheets.service.handler import Handler, Handlers
 
 
 class OpenSheetSelector(Handler):
-    HANDLES = {command.AskUserForASheet}
+    HANDLES = {command.AskUserForASheetOrWorkspace}
 
     def __init__(self, bus: message_bus.MessageBus, ui: ui_port.UIPort):
         self.ui = ui
         self.bus = bus
 
-    def __call__(self, message: command.AskUserForASheet):
+    def __call__(self, message: command.AskUserForASheetOrWorkspace):
         if filepath := self.ui.ask_user_for_sheet():
             if filepath.suffix == ".bsw":
                 self.bus.handle(command.LoadWorkspace(filepath))
@@ -104,6 +104,7 @@ class SaveWorkspace(Handler):
             uowi.sheets.save_workspace(
                 message.queries, message.filepath, update_handler=self.Update(self.ui)
             )
+        # todo we should use an event instead of directly calling the UI
         self.ui.finish_saving_workspace()
 
 
@@ -133,6 +134,7 @@ class LoadWorkspace(Handler):
                 message.filepath, update_handler=self.Update(self.ui)
             )
             uowi.commit()
+        # todo we should use an event instead of directly calling the UI
         self.ui.finish_loading_workspace(queries)
 
 

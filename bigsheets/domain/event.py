@@ -19,3 +19,6 @@ class SheetOpened(Event):
 @dataclass
 class SheetRemoved(Event):
     remaining_sheets: t.Collection[model.Sheet]
+
+# todo missing event for WorkspaceLoaded
+# todo missing event for WorkspaceSaved

@@ -10,7 +10,7 @@ class Command:
 
 
 @dataclass
-class AskUserForASheet(Command):
+class AskUserForASheetOrWorkspace(Command):
     pass
 
 

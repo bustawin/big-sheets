@@ -39,7 +39,7 @@ class BigSheets:
             self.container.resolve("event_handlers"),
             self.container.resolve("command_handlers"),
         )
-        self.bus.handle(command.AskUserForASheet())
+        self.bus.handle(command.AskUserForASheetOrWorkspace())
 
 
 def bootstrap(
