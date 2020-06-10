@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 
-from bigsheets.domain import model as sheet_model
+from bigsheets.domain import sheet as sheet_model
 
 
 class Error(abc.ABC):

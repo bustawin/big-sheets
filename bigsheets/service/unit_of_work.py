@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from bigsheets.adapters.error import error as error_adapter
 from bigsheets.adapters.sheets import sheets
-from bigsheets.domain import event, model as m
+from bigsheets.domain import event, sheet as sheet_model
 from bigsheets.service.message_bus import MessageBus
 
 
@@ -20,9 +20,11 @@ class UnitOfWork:
     def instantiate(self) -> UnitOfWorkInstance:
         session = self.sheet_engine_factory()
         sheets = self.Sheets(session)
-        return UnitOfWorkInstance(bus=self.bus, session=session, sheets=sheets, errors=self.errors)
+        return UnitOfWorkInstance(
+            bus=self.bus, session=session, sheets=sheets, errors=self.errors
+        )
 
-    def handle_breaking_uow(self, *models: m.ModelWithEvent):
+    def handle_breaking_uow(self, *models: sheet_model.ModelWithEvent):
         """Submits the events of the model breaking the unit of work
         pattern.
 
@@ -41,7 +43,7 @@ class UnitOfWorkInstance:
     sheets: sheets.SheetsPort
     errors: error_adapter.ErrorPort
 
-    def commit(self, *models: t.Union[m.ModelWithEvent, event.Event]):
+    def commit(self, *models: t.Union[sheet_model.ModelWithEvent, event.Event]):
         """Commit and, after, submit the events."""
         self.session.commit()
         _handle(*models, bus=self.bus)
@@ -56,7 +58,9 @@ class UnitOfWorkInstance:
         self.session.close()
 
 
-def _handle(*model_or_event: t.Union[m.ModelWithEvent, event.Event], bus: MessageBus):
+def _handle(
+    *model_or_event: t.Union[sheet_model.ModelWithEvent, event.Event], bus: MessageBus
+):
     for me in model_or_event:
         if hasattr(me, "events"):
             while me.events:

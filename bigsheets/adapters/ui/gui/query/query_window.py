@@ -10,7 +10,7 @@ import webview as pywebview
 
 # noinspection PyUnresolvedReferences
 from bigsheets.adapters.ui.gui import gui, utils
-from bigsheets.domain import command, model
+from bigsheets.domain import command, sheet
 from bigsheets.service import read_model
 from . import controller
 from .view import View
@@ -67,7 +67,7 @@ class QueryWindow:
     def ask_user_for_sheet(self) -> t.Optional[Path]:
         return self.file_dialog()
 
-    def start_opening_sheet(self, sheet: model.Sheet):
+    def start_opening_sheet(self, sheet: sheet.Sheet):
         self.ctrl.progress.start_processing(sheet.num_rows)
         self.ctrl.info.set(
             "Some functionality is disabled until the sheet finishes opening."
@@ -101,7 +101,7 @@ class QueryWindow:
         self.ctrl.query.enable()
         self.set_open_sheets(*self.reader.opened_sheets())
 
-    def set_open_sheets(self, *sheets: model.Sheet):
+    def set_open_sheets(self, *sheets: sheet.Sheet):
         self.ctrl.sheets_button.set(
             [{"name": sheet.name, "filename": sheet.filename} for sheet in sheets]
         )

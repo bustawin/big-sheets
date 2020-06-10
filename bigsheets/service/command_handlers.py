@@ -4,7 +4,7 @@ import typing as t
 
 from bigsheets.adapters.sheets import sheets as sheets_adapter
 from bigsheets.adapters.ui import ui_port
-from bigsheets.domain import command, event, model
+from bigsheets.domain import command, event, sheet
 from bigsheets.service import message_bus, unit_of_work
 from bigsheets.service.handler import Handler, Handlers
 
@@ -32,7 +32,7 @@ class OpenSheet(Handler):
             super().__init__()
             self.ui = ui
 
-        def on_init(self, sheet: model.Sheet):
+        def on_init(self, sheet: sheet.Sheet):
             super().on_init(sheet)
             self.ui.start_opening_sheet(sheet)
 
@@ -85,7 +85,7 @@ class SaveWorkspace(Handler):
             super().__init__()
             self.ui = ui
 
-        def on_init(self, sheet: t.Collection[model.Sheet]):
+        def on_init(self, sheet: t.Collection[sheet.Sheet]):
             super().on_init(sheet)
             self.ui.start_saving_workspace(sheet)
 
@@ -116,7 +116,7 @@ class LoadWorkspace(Handler):
             super().__init__()
             self.ui = ui
 
-        def on_init(self, sheet: t.Collection[model.Sheet]):
+        def on_init(self, sheet: t.Collection[sheet.Sheet]):
             super().on_init(sheet)
             self.ui.start_loading_workspace(sheet)
 

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from bigsheets.adapters.sheets.sheets import SheetsAdaptor, UpdateHandler
-from bigsheets.domain import model
+from bigsheets.domain import sheet as sheet_model
 from bigsheets.domain.error import WrongRow
 from test.conftest import FIXTURES
 
@@ -84,7 +84,7 @@ class TestSheets:
         with session, tempfile.NamedTemporaryFile(mode="wb+") as fp:
             session.execute("create table s1(x numeric, y numeric)")
             session.execute('insert into s1 values("foo", "bar")')
-            sheet = model.Sheet(
+            sheet = sheet_model.Sheet(
                 "s1", [], header=["x", "y"], num_rows=1, filename="foo.bar"
             )
             MockedSheetsAdaptor.sheets.add(sheet)

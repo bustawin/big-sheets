@@ -15,11 +15,17 @@ class ModelWithEvent(t.Protocol):
 
 
 class Sheet:
-    def __init__(self, name: str, rows: Rows, header: Row, num_rows: int, filename: str):
+    """Aggregate."""
+
+    def __init__(
+        self, name: str, rows: Rows, header: Row, num_rows: int, filename: str
+    ):
         self.rows: Rows = rows
         """The rows of the sheet. For a sheet that is opening,
         the rows that all available at the moment.
         """
+        # todo a sqlalchemy mapper should map this value to the adapter
+
         self.name: str = name
         """The name of the sheet, which is the name of the table too."""
         self.events: t.Deque[event.Event] = deque()

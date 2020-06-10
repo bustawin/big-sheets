@@ -4,7 +4,7 @@ import sqlite3
 import typing as t
 from dataclasses import dataclass
 
-from bigsheets.domain import model
+from bigsheets.domain import sheet
 from bigsheets.service import unit_of_work
 
 
@@ -18,7 +18,7 @@ class ReadModel:
 
     def query(
         self, q: str, limit: int = 100, page: int = 0
-    ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
+    ) -> t.Iterator[t.Union[t.Tuple[str, ...], sheet.Row]]:
         with self.uow.instantiate() as uowi:
             yield from self._query(q, limit, page, uowi.session)
 
@@ -30,7 +30,7 @@ class ReadModel:
 
     def _query(
         self, q: str, limit: int, page: int, session: sqlite3.Connection
-    ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
+    ) -> t.Iterator[t.Union[t.Tuple[str, ...], sheet.Row]]:
         q = f"{q} LIMIT {limit} OFFSET {limit * page}"
 
         cursor: sqlite3.Cursor = session.execute(q)

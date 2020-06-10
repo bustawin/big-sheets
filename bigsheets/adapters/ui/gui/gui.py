@@ -10,7 +10,7 @@ from threading import Thread
 import webview as pywebview
 
 import bigsheets.service.utils
-from bigsheets.domain import command, model
+from bigsheets.domain import command, sheet
 from bigsheets.service import message_bus, read_model, running
 # noinspection PyUnresolvedReferences
 from . import utils
@@ -47,18 +47,18 @@ class GUIAdapter(UIPort):
     def ask_user_for_sheet(self):
         return self.windows[-1].ask_user_for_sheet()
 
-    def start_opening_sheet(self, sheet: model.Sheet):
+    def start_opening_sheet(self, sheet: sheet.Sheet):
         self.windows[-1].start_opening_sheet(sheet)
 
     def update_sheet_opening(self, completed: int):
         self.windows[-1].update_sheet_opening(completed)
 
-    def sheet_opened(self, *opened_sheets: model.Sheet):
+    def sheet_opened(self, *opened_sheets: sheet.Sheet):
         for window in self.windows:
             window.sheet_opened()
             window.set_open_sheets(*opened_sheets)
 
-    def sheet_removed(self, *sheet: model.Sheet):
+    def sheet_removed(self, *sheet: sheet.Sheet):
         for window in self.windows:
             window.set_open_sheets(*sheet)
 

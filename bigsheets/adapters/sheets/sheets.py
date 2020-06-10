@@ -15,7 +15,7 @@ import more_itertools
 import zipstream
 
 from bigsheets.adapters.sheets.file import CSVFile
-from bigsheets.domain import error as error_model, model
+from bigsheets.domain import error as error_model, sheet as sheet_model
 from bigsheets.service import running
 
 
@@ -51,7 +51,7 @@ class UpdateHandler:
     def __init__(self):
         self.total = 0
 
-    def on_init(self, sheet: t.Union[model.Sheet, t.Collection[model.Sheet]]):
+    def on_init(self, sheet: t.Union[sheet_model.Sheet, t.Collection[sheet_model.Sheet]]):
         pass
 
     def on_it(self, n: int):
@@ -70,7 +70,7 @@ class SheetsPort(abc.ABC):
     @abc.abstractmethod
     def open_sheet(
         self, filepath: Path, update_handler: UpdateHandler = UpdateHandler(),
-    ) -> t.Tuple[model.Sheet, t.List[error_model.WrongRow]]:
+    ) -> t.Tuple[sheet_model.Sheet, t.List[error_model.WrongRow]]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -78,12 +78,12 @@ class SheetsPort(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def remove_sheet(self, *, name: str) -> model.Sheet:
+    def remove_sheet(self, *, name: str) -> sheet_model.Sheet:
         """Removes a sheet (ie. closes)."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get(self) -> t.Iterator[model.Sheet]:
+    def get(self) -> t.Iterator[sheet_model.Sheet]:
         """Gets all the sheets."""
         raise NotImplementedError
 
@@ -118,7 +118,7 @@ class SheetsAdaptor(SheetsPort):
     SQLITE_VAR_LIMIT = 999
     """Max number of variables in queries for sqlite."""
 
-    sheets: t.Set[model.Sheet] = set()
+    sheets: t.Set[sheet_model.Sheet] = set()
     """The opened sheets models."""
     # todo use a thread-safe structure and testing
     #   And probably this could be taken into its own class
@@ -127,11 +127,11 @@ class SheetsAdaptor(SheetsPort):
 
     def open_sheet(
         self, filepath: Path, update_handler: UpdateHandler = UpdateHandler()
-    ) -> t.Tuple[model.Sheet, t.List[error_model.WrongRow]]:
+    ) -> t.Tuple[sheet_model.Sheet, t.List[error_model.WrongRow]]:
         with filepath.open() as f:
             file = CSVFile(f)
-            table_name = model.new_sheet_name(self.number_of_sheets())
-            sheet = model.Sheet(
+            table_name = sheet_model.new_sheet_name(self.number_of_sheets())
+            sheet = sheet_model.Sheet(
                 table_name,
                 rows=file.rows,
                 header=file.headers,
@@ -156,7 +156,7 @@ class SheetsAdaptor(SheetsPort):
             self.session.execute("SELECT name FROM sqlite_master WHERE type='table'")
         )
 
-    def _create_table_q(self, table_name, headers: model.Row):
+    def _create_table_q(self, table_name, headers: sheet_model.Row):
         cols = (f"'{name}' NUMERIC" for name in headers)
         return f"CREATE TABLE {table_name} ({','.join(cols)})"
 
@@ -186,7 +186,7 @@ class SheetsAdaptor(SheetsPort):
         # Note that the last chunk might have lesser rows
         return self.SQLITE_VAR_LIMIT // cols
 
-    def remove_sheet(self, *, name: str) -> model.Sheet:
+    def remove_sheet(self, *, name: str) -> sheet_model.Sheet:
         sheet = next(sheet for sheet in self.sheets if sheet.name == name)
         self.session.execute(f"DROP TABLE {name}")
         self.sheets.remove(sheet)
@@ -242,7 +242,7 @@ class SheetsAdaptor(SheetsPort):
                 i = json.load(info)
                 self.sheets.clear()
                 for s in i["sheets"]:
-                    sheet = model.Sheet(
+                    sheet = sheet_model.Sheet(
                         name=s["name"],
                         rows=s["rows"],
                         header=s["header"],
@@ -259,7 +259,7 @@ class SheetsAdaptor(SheetsPort):
                         update_handler.on_it(rows_opened)
         return i["queries"]
 
-    def _export_sheet(self, sheet: model.Sheet):
+    def _export_sheet(self, sheet: sheet_model.Sheet):
         # We cannot use pydantic because
         # https://github.com/pyinstaller/pyinstaller/issues/4406
         return {
