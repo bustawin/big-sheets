@@ -17,13 +17,10 @@ def test_open_csv_sheet_when_opening_the_app(gui, engine_factory):
         Then the app shows a file selector
 
       Scenario: User selects the CSV sheet file to open
-
-
-        And The app shows a file selector
-        When I select a sheet to open
-        Then I see a progress bar while the sheet is opening
-        And I see some rows while the sheet is loading
-        And I see the final sheet once it is opened
+        Given the user selects a sheet to open
+        Then the user sees a progress bar while the sheet is opening
+        And the user sees some rows while the sheet is loading
+        And the user sees the final sheet once it is opened
     """
     MockedGUIAdapter, native_window = gui
     native_window.create_file_dialog = mock.MagicMock(
@@ -70,21 +67,24 @@ def test_open_another_sheet_once_the_app_is_opened():
 
     Scenario: User opens the file selector
       Given An opened app
-      When I click on an "Open Sheet" button
+      When the user clicks on an "Open Sheet" button
       Then The app shows a file selector
 
     Scenario: User selects the CSV sheet file to open
-      Given I opened the file selector
-      When I select the CSV sheet and click open
+      Given file selector is opened
+      When the user selects the CSV sheet and click open
       Then The app adds the newly opened sheet into a window
 
-    Scenario: App opens the CSV shee
+    Scenario: App opens the CSV sheet
+      When the sheets opens further
+      Then the user sees a progress bar while the sheet is opening
+      And the user sees a view with a table and the first rows of the sheet
 
-
-
-
-    Opens another sheet with a new window,
-    and added into the sheet list.
+    Scenario: Sheet is opened
+      When the sheet is opened
+      Then the user does not see the progress bar
+      And the user can see the sheet
+      And the user can query the sheet
     """
 
 
