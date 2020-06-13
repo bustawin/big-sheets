@@ -24,7 +24,7 @@ class PostInstallCommand(install):
 
 setup(
     name="BigSheets",
-    version="1.0a1",
+    version="1.0b1",
     url="https://github.com/bustawin/bigsheets",
     project_urls={
         "Documentation": "https://github.com/bustawin/bigsheets",
