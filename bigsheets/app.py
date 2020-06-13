@@ -4,7 +4,7 @@ import typing as t
 from collections import defaultdict
 
 from bigsheets.adapters.sheets import sheets
-from bigsheets.adapters.error import error as error_adapter
+from bigsheets.adapters.errors import errors as error_adapter
 from bigsheets.adapters.ui import ui_port
 from bigsheets.adapters.ui.gui import gui
 from bigsheets.domain import command
@@ -50,7 +50,7 @@ def bootstrap(
     container = Container()
     container.register(read_model.ReadModel, scope=Scope.singleton)
     container.register(
-        error_adapter.ErrorPort, error_adapter.ErrorAdapter, scope=Scope.singleton
+        error_adapter.Errors, error_adapter.ErrorsAdapter, scope=Scope.singleton
     )
     container.register(
         unit_of_work.UnitOfWork,

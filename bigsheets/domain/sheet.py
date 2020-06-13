@@ -15,7 +15,10 @@ class ModelWithEvent(t.Protocol):
 
 
 class Sheet:
-    """Aggregate."""
+    """The root entity of the Sheet aggregate.
+
+    Represents an opened sheet.
+    """
 
     def __init__(
         self, name: str, rows: Rows, header: Row, num_rows: int, filename: str

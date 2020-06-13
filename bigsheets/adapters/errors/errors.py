@@ -9,7 +9,11 @@ from ordered_set_37 import OrderedSet
 from bigsheets.domain import error as model
 
 
-class ErrorPort(abc.ABC):
+class Errors(abc.ABC):
+    """The repository of errors as part of the infrastructure layer.
+
+    This class gets and saves errors.
+    """
     def get(self) -> t.Dict[str, OrderedSet[model.Error]]:
         raise NotImplementedError
 
@@ -17,7 +21,7 @@ class ErrorPort(abc.ABC):
         raise NotImplementedError
 
 
-class ErrorAdapter(ErrorPort):
+class ErrorsAdapter(Errors):
     def __init__(self):
         self._errors: t.Dict[str, OrderedSet[model.Error]] = defaultdict(
             OrderedSet

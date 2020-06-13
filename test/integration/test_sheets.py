@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 from unittest import mock
-from unittest.mock import MagicMock, call
+from unittest.mock import call
 
 import pytest
 
@@ -48,9 +48,9 @@ class TestSheets:
         )
         assert len(errors) == 1
         e = errors[0]
-        assert e.filename.endswith('cities-wrong.csv')
-        assert e.sheet_name == 'sheet1'
-        assert e.row == ['41', '5', '59', 'N', '80', '39', '0', 'W', 'Youngstown']
+        assert e.filename.endswith("cities-wrong.csv")
+        assert e.sheet_name == "sheet1"
+        assert e.row == ["41", "5", "59", "N", "80", "39", "0", "W", "Youngstown"]
         assert isinstance(e, WrongRow)
 
     def test_engine_persistance(self, engine_factory):
@@ -91,7 +91,7 @@ class TestSheets:
             MockedSheetsAdaptor(session).save_workspace(
                 ["select * from s1", "select x from s1"],
                 Path(fp.name),
-                update_handler=update_handler
+                update_handler=update_handler,
             )
             fp.seek(0)
             with zipfile.ZipFile(fp) as z:

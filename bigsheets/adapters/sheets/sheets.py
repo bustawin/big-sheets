@@ -58,7 +58,7 @@ class UpdateHandler:
         self.total += n
 
 
-class SheetsPort(abc.ABC):
+class Sheets(abc.ABC):
     """The repository of sheets as part of the infrastructure layer.
 
     This class loads, queries, and saves sheets.
@@ -112,7 +112,7 @@ class SheetsPort(abc.ABC):
         raise NotImplementedError
 
 
-class SheetsAdaptor(SheetsPort):
+class SheetsAdaptor(Sheets):
     """The repository of sheets."""
 
     SQLITE_VAR_LIMIT = 999
