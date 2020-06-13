@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="main.css"/>
+  <link rel="stylesheet" type="text/css" href="../native-styles/mac.css"/>
+  <link rel="stylesheet"
+        type="text/css"
+        href="../node_modules/@fortawesome/fontawesome-free/css/all.css"/>
+  <link rel="stylesheet" type="text/css" href="../ace/index.css">
+  <script src="../node_modules/ace-builds/src-noconflict/ace.js"
+          type="text/javascript"
+          charset="utf-8" defer></script>
+  <script src="../node_modules/ace-builds/src-noconflict/mode-sql.js" defer></script>
+  <script src="../ace/mode-sql-bigsheet.js" defer></script>
+  <script src="../node_modules/ace-builds/src-noconflict/ext-language_tools.js" defer></script>
+  <script src="../ace/index.js" defer></script>
+  <script src="../node_modules/@popperjs/core/dist/umd/popper.js"></script>
+  <script src="../node_modules/tippy.js/dist/tippy-bundle.umd.js"></script>
+</head>
+<body>
+<div>
+  <header>
+    <nav>
+      <div class="nav-button">
+        <button id="open-window"><i class="fa fa-window-restore fa-lg"></i></button>
+        <div>New tab</div>
+      </div>
+      <div class="nav-button">
+        <button id="sheets-button"><i class="fa fa-table fa-lg"></i></button>
+        <div>Sheets</div>
+      </div>
+      <div class="nav-button">
+        <button id="open-sheet-button"><i class="fa fa-lg fa-plus"></i></button>
+        <div>Open sheet</div>
+      </div>
+      <div class="nav-button">
+        <button id="export-view-button"><i class="fa fa-lg fa-file-csv"></i></button>
+        <div>Export full view as CSV</div>
+      </div>
+      <div class="nav-button">
+        <button id="save-workspace-button"><i class="fa fa-lg fa-save"></i></button>
+        <div>Save workspace</div>
+      </div>
+      <div id="nav-right">
+        <div class="nav-button">
+          <input type="number" min="1" step="1" id="limit">
+          <div>Limit</div>
+        </div>
+        <div class="nav-button">
+          <input type="number" min="0" step="1" id="page">
+          <div>Page</div>
+        </div>
+      </div>
+    </nav>
+    <form id="query-form" onsubmit="window.query.submitQuery(event)">
+      <div id="query-editor"></div>
+      <input type="submit" id="query-submit" value="Filter">
+      <div id="query-message"></div>
+    </form>
+  </header>
+  <main>
+    <table id="table"></table>
+  </main>
+  <footer id="footer">
+    <small id="info"></small>
+    <progress id="progress"></progress>
+  </footer>
+</div>
+</body>
+<script src="index.js" async></script>
+<link rel="stylesheet" type="text/css" href="../node_modules/tippy.js/dist/tippy.css">
+<link rel="stylesheet" type="text/css" href="../node_modules/tippy.js/animations/scale.css">
+</html>
+

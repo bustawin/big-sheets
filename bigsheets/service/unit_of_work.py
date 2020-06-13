@@ -4,8 +4,9 @@ import sqlite3
 import typing as t
 from dataclasses import dataclass
 
+from bigsheets.adapters.errors import errors as error_adapter
 from bigsheets.adapters.sheets import sheets
-from bigsheets.domain import model as m
+from bigsheets.domain import event, sheet as sheet_model
 from bigsheets.service.message_bus import MessageBus
 
 
@@ -13,14 +14,17 @@ from bigsheets.service.message_bus import MessageBus
 class UnitOfWork:
     sheet_engine_factory: callable
     bus: MessageBus
-    Sheets: t.Type[sheets.SheetsPort]
+    Sheets: t.Type[sheets.Sheets]
+    errors: error_adapter.Errors
 
     def instantiate(self) -> UnitOfWorkInstance:
         session = self.sheet_engine_factory()
         sheets = self.Sheets(session)
-        return UnitOfWorkInstance(bus=self.bus, session=session, sheets=sheets)
+        return UnitOfWorkInstance(
+            bus=self.bus, session=session, sheets=sheets, errors=self.errors
+        )
 
-    def handle_breaking_uow(self, *models: m.ModelWithEvent):
+    def handle_breaking_uow(self, *models: sheet_model.ModelWithEvent):
         """Submits the events of the model breaking the unit of work
         pattern.
 
@@ -36,9 +40,10 @@ class UnitOfWork:
 class UnitOfWorkInstance:
     bus: MessageBus
     session: sqlite3.Connection
-    sheets: sheets.SheetsPort
+    sheets: sheets.Sheets
+    errors: error_adapter.Errors
 
-    def commit(self, *models: m.ModelWithEvent):
+    def commit(self, *models: t.Union[sheet_model.ModelWithEvent, event.Event]):
         """Commit and, after, submit the events."""
         self.session.commit()
         _handle(*models, bus=self.bus)
@@ -53,7 +58,12 @@ class UnitOfWorkInstance:
         self.session.close()
 
 
-def _handle(*models: m.ModelWithEvent, bus: MessageBus):
-    for model in models:
-        while model.events:
-            bus.handle(model.events.popleft())
+def _handle(
+    *model_or_event: t.Union[sheet_model.ModelWithEvent, event.Event], bus: MessageBus
+):
+    for me in model_or_event:
+        if hasattr(me, "events"):
+            while me.events:
+                bus.handle(me.events.popleft())
+        else:
+            bus.handle(me)

@@ -1,5 +1,9 @@
+from bigsheets.service.utils import ensure_utf8, setup_logging
+
+setup_logging()
+ensure_utf8()
+
 from bigsheets.app import BigSheets
 
-if __name__ == '__main__':
-    bs = BigSheets()
-    bs.start()
+bs = BigSheets()
+bs.start()

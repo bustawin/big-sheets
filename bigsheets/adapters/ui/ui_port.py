@@ -4,8 +4,10 @@ import abc
 import typing as t
 from pathlib import Path
 
-from bigsheets.domain import model
+from bigsheets.domain import sheet
 from bigsheets.service import read_model
+
+Sheets = t.Collection[sheet.Sheet]
 
 
 class UIPort(abc.ABC):
@@ -27,7 +29,7 @@ class UIPort(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def start_opening_sheet(self, sheet: model.Sheet):
+    def start_opening_sheet(self, sheet: sheet.Sheet):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -35,9 +37,48 @@ class UIPort(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def sheet_opened(self, *opened_sheets: model.Sheet):
+    def sheet_opened(self, opened_sheets: sheet.Sheet):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def sheet_removed(self, *sheet: model.Sheet):
+    def sheet_removed(self, *sheet: sheet.Sheet):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def open_sheet(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def save_workspace(self):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def start_saving_workspace(self, sheets: Sheets):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_saving_workspace(self, quantity: int):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def finish_saving_workspace(self):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def start_loading_workspace(self, sheets: Sheets):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_loading_workspace(self, quantity):
+        """"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def finish_loading_workspace(self, queries: t.Collection[str]):
+        """"""
         raise NotImplementedError

@@ -1,23 +1,24 @@
 from __future__ import annotations
 
+import logging
 import threading
 import typing as t
-from dataclasses import dataclass
+from contextlib import suppress
 from functools import partial
-from pathlib import Path
 from threading import Thread
 
 import webview as pywebview
 
 import bigsheets.service.utils
-from bigsheets.adapters.ui.gui import controller
-from bigsheets.domain import model
+from bigsheets.domain import command, sheet
 from bigsheets.service import message_bus, read_model, running
-
 # noinspection PyUnresolvedReferences
 from . import utils
-from .view import View
-from ..ui_port import UIPort
+from .query import controller, query_window
+from .warnings import warnings_window
+from ..ui_port import Sheets, UIPort
+
+log = logging.getLogger(__name__)
 
 
 class GUIAdapter(UIPort):
@@ -26,14 +27,16 @@ class GUIAdapter(UIPort):
 
     def __init__(self, reader: read_model.ReadModel, bus: message_bus.MessageBus):
         super().__init__(reader)
-        self.windows: t.List[Window] = []
+        self.windows: t.List[query_window.QueryWindow] = []
         self.bus = bus
+        self.warnings_window: t.Optional[warnings_window.WarningsWindow] = None
 
     def start(self, on_loaded: callable):
         # todo should on_loaded be an event?
         assert not self.windows
+        log.info("Creating window %s", len(self.windows))
         self.windows.append(
-            Window(
+            query_window.QueryWindow(
                 self,
                 self.handle_closing_window,
                 partial(self._execute_outside_main_thread, on_loaded),
@@ -44,23 +47,24 @@ class GUIAdapter(UIPort):
     def ask_user_for_sheet(self):
         return self.windows[-1].ask_user_for_sheet()
 
-    def start_opening_sheet(self, sheet: model.Sheet):
+    def start_opening_sheet(self, sheet: sheet.Sheet):
         self.windows[-1].start_opening_sheet(sheet)
 
     def update_sheet_opening(self, completed: int):
         self.windows[-1].update_sheet_opening(completed)
 
-    def sheet_opened(self, *opened_sheets: model.Sheet):
-        self.windows[-1].sheet_opened()
+    def sheet_opened(self, *opened_sheets: sheet.Sheet):
         for window in self.windows:
+            window.sheet_opened()
             window.set_open_sheets(*opened_sheets)
 
-    def sheet_removed(self, *sheet: model.Sheet):
+    def sheet_removed(self, *sheet: sheet.Sheet):
         for window in self.windows:
             window.set_open_sheets(*sheet)
 
-    def handle_closing_window(self, window: Window):
-        self.windows.remove(window)
+    def handle_closing_window(self, window: query_window.QueryWindow):
+        with suppress(ValueError):
+            self.windows.remove(window)
         if not self.windows:
             running.exit()
 
@@ -73,82 +77,75 @@ class GUIAdapter(UIPort):
     def open_window(self):
         """Opens a new window showing the table of """
         ev = threading.Event()
-        window = Window(self, self.handle_closing_window, lambda: ev.set())
+        log.info("Creating window %s", len(self.windows))
+        window = query_window.QueryWindow(
+            self, self.handle_closing_window, lambda: ev.set()
+        )
         ev.wait()
         self.windows.append(window)
-        window.init_with_sheet()
+        return window
 
+    def open_sheet(self):
+        window = self.open_window()
+        if not self.bus.handle(command.AskUserForASheetOrWorkspace()):
+            window.close()
+            self.handle_closing_window(window)
 
-class Window:
-    @dataclass
-    class Ctrl:
-        progress: controller.Progress
-        info: controller.Info
-        table: controller.Table
-        query: controller.Query
-        nav: controller.Nav
-        sheets_button: controller.SheetsButton
+    # Saving workspace
 
-    def __init__(
-        self, ui: GUIAdapter, on_closing: callable, on_loaded: callable,
-    ):
-        self.reader: read_model.ReadModel = ui.reader
-        self._view = View(self.reader, None, ui, self, ui.bus)
-        self.webview: pywebview = ui.webview
-        self.native_window = self.webview.create_window(
-            "Bigsheets", "adapters/ui/gui/templates/index.html", js_api=self._view
+    def save_workspace(self):
+        if filepath := self.windows[0].file_dialog(save="workspace.bsw"):
+            # todo should we take this in "start_saving_workspace?"
+            queries = tuple(w.query for w in self.windows)
+            self.bus.handle(command.SaveWorkspace(queries, filepath))
+
+    def start_saving_workspace(self, sheets: Sheets):
+        total = max(sheet.num_rows for sheet in sheets)
+        for window in self.windows:
+            window.start_blocking_process(
+                total, "Some functionality is disabled until the workspace is saved."
+            )
+
+    def update_saving_workspace(self, quantity: int):
+        for window in self.windows:
+            window.update_blocking_process(quantity)
+
+    def finish_saving_workspace(self):
+        for window in self.windows:
+            window.finish_blocking_process()
+
+    def start_loading_workspace(self, sheets: Sheets):
+        total = max(sheet.num_rows for sheet in sheets)
+        self.windows[0].start_blocking_process(
+            total, "Functionality is disabled until the workspace is loaded."
         )
-        self.native_window.closing += partial(on_closing, self)
-        self.native_window.loaded += on_loaded
-        self.ctrl = self.Ctrl(
-            ui.ctrl.Progress(self.native_window),
-            ui.ctrl.Info(self.native_window),
-            ui.ctrl.Table(self.native_window),
-            ui.ctrl.Query(self.native_window),
-            ui.ctrl.Nav(self.native_window),
-            ui.ctrl.SheetsButton(self.native_window),
-        )
-        self._view.ctrl = self.ctrl
 
-    def ask_user_for_sheet(self) -> t.Optional[Path]:
-        r = self.native_window.create_file_dialog(
-            self.webview.OPEN_DIALOG,
-            allow_multiple=False,
-            file_types=("CSV (*.csv;*.tsv)",),
-        )
-        return Path(r[0]) if r else None
+    def update_loading_workspace(self, quantity):
+        self.windows[0].update_blocking_process(quantity)
 
-    def start_opening_sheet(self, sheet: model.Sheet):
-        self.ctrl.progress.start_processing(sheet.num_rows)
-        self.ctrl.info.set(
-            "Some functionality is disabled until the sheet finishes opening."
-        )
-        self.ctrl.table.set(sheet.rows, sheet.header)
-        self.ctrl.query.init(sheet.name, sheet.header)
-        self.ctrl.query.disable()
+    def finish_loading_workspace(self, queries: t.Collection[str]):
+        first_query = True
+        for query in queries:
+            if first_query:
+                first_query = False
+                self.windows[0].init_with_query(query)
+                self.windows[0].finish_blocking_process()
+            else:
+                ev = threading.Event()
+                window = query_window.QueryWindow(
+                    self, self.handle_closing_window, lambda: ev.set()
+                )
+                ev.wait()
+                self.windows.append(window)
+                window.init_with_query(query)
 
-    def update_sheet_opening(self, completed: int):
-        self.ctrl.progress.update(completed)
+    # Managing "Warnings" window
 
-    def sheet_opened(self):
-        self.ctrl.progress.finish()
-        self.ctrl.info.unset()
-        self.ctrl.nav.enable()
-        self.ctrl.query.enable()
+    def open_warnings_window(self):
+        if not self.warnings_window:
+            self.warnings_window = warnings_window.WarningsWindow(
+                self, self._on_closing_warnings_window
+            )
 
-    def init_with_sheet(self):
-        r = self.reader.query_default_last_sheet()
-        sheet_name = next(r)
-        res = next(r)
-        headers = next(res)
-        results = tuple(res)
-        self.ctrl.table.set(results, headers)
-        self.ctrl.query.init(sheet_name, headers)
-        self.ctrl.nav.enable()
-        self.ctrl.query.enable()
-        self.set_open_sheets(*self.reader.opened_sheets())
-
-    def set_open_sheets(self, *sheets: model.Sheet):
-        self.ctrl.sheets_button.set(
-            [{"name": sheet.name, "filename": sheet.filename} for sheet in sheets]
-        )
+    def _on_closing_warnings_window(self):
+        self.warnings_window = None

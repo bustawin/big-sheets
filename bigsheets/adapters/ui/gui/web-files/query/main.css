@@ -1,0 +1,130 @@
+body {
+    margin: 0;
+    position: fixed;
+    overflow: hidden;
+}
+
+
+.sheets-button-line {
+    text-align: left;
+}
+
+
+#query-form {
+    text-align: center;
+    position: relative;
+
+}
+
+#query-form * {
+    vertical-align: middle;
+}
+
+#query-message {
+    min-height: calc(1em + 2px);
+    color: tomato;
+    margin: 0 0.25em 0.25em 0.25em
+}
+
+.codeflask {
+    height: 2em !important;
+}
+
+#query-form input[type=submit] {
+    -webkit-appearance: button;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+main {
+    width: 100vw;
+    height: calc(100vh - 90px - 1.75em);
+    overflow: scroll;
+}
+
+#table {
+    table-layout: auto;
+    border-collapse: collapse;
+    position: relative;
+    min-width: 99.9%;
+    user-select: auto;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+}
+
+#table input {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    font-size: 100%;
+    border: none;
+
+}
+
+#table td {
+    min-width: 3em;
+    max-width: 40em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 0.25em 0.5em;
+    margin: 0;
+}
+
+th.col {
+    position: sticky;
+    top: 0;
+}
+
+th.col div {
+    resize: horizontal;
+    display: block;
+    overflow: auto;
+}
+
+th div {
+    word-break: keep-all;
+}
+
+
+nav {
+    margin-top: 0.15em;
+    margin-left: 0.15em;
+    margin-right: 0.15em
+}
+
+
+footer {
+    position: fixed;
+    bottom: 0;
+    padding-right: 1em;
+    text-align: right;
+    width: 100vw;
+}
+
+#progress {
+    vertical-align: middle;
+}
+
+#info {
+    margin-right: 1em;
+}
+
+.tippy-box[data-theme~='ours'] {
+    background: Window;
+    color: WindowText;
+    border: var(--dialog-border);
+    border-radius: var(--dialog-border-radius);
+    box-shadow: var(--dialog-shadow);
+    max-width: initial !important; /* tippy applies an ugly max-width */
+}
+
+.tippy-box[data-theme~='ours'][data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: Window;
+}
+
+.close-button {
+    width: 2em;
+    height: 2em
+}

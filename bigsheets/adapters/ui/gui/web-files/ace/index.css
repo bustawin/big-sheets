@@ -1,0 +1,27 @@
+#query-editor {
+    position: relative;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(100vw - 21em);
+    display: inline-block;
+    margin-top: -1px;
+    background: var(--input-background);
+    border: var(--input-border);
+    border-radius: var(--input-border-radius);
+    box-shadow: var(--input-box-shadow);
+}
+
+
+.ace_variable {
+    color: blueviolet !important;
+}
+
+.ace_autocomplete {
+    font-family: system-ui;
+    background: Window !important;
+    color: WindowText;
+    border: 1px solid rgb(185, 185, 185);
+    border-radius: 8px;
+}

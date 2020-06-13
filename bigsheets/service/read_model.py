@@ -4,7 +4,7 @@ import sqlite3
 import typing as t
 from dataclasses import dataclass
 
-from bigsheets.domain import model
+from bigsheets.domain import sheet
 from bigsheets.service import unit_of_work
 
 
@@ -17,29 +17,30 @@ class ReadModel:
     uow: unit_of_work.UnitOfWork
 
     def query(
-        self, q: str, limit: int, page: int
-    ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
+        self, q: str, limit: int = 100, page: int = 0
+    ) -> t.Iterator[t.Union[t.Tuple[str, ...], sheet.Row]]:
         with self.uow.instantiate() as uowi:
-            for row in self._query(q, limit, page, uowi.session):
-                yield row
+            yield from self._query(q, limit, page, uowi.session)
 
-    def query_default_last_sheet(self):
+    def q_default_last_sheet(self):
         with self.uow.instantiate() as uowi:
             sheet_name = f"sheet{uowi.sheets.number_of_sheets()}"
             q = f"SELECT * FROM {sheet_name}"
-            yield sheet_name
-            yield self._query(q, 50, 0, uowi.session)
+            yield from self._query(q, 100, 0, uowi.session)
 
     def _query(
         self, q: str, limit: int, page: int, session: sqlite3.Connection
-    ) -> t.Iterator[t.Union[t.Tuple[str, ...], model.Row]]:
+    ) -> t.Iterator[t.Union[t.Tuple[str, ...], sheet.Row]]:
         q = f"{q} LIMIT {limit} OFFSET {limit * page}"
 
         cursor: sqlite3.Cursor = session.execute(q)
         yield tuple(h[0] for h in cursor.description)
-        for row in cursor:
-            yield row
+        yield from cursor
 
     def opened_sheets(self):
         with self.uow.instantiate() as uowi:
-            return uowi.sheets.get()
+            yield from uowi.sheets.get()
+
+    def errors(self):
+        with self.uow.instantiate() as uowi:
+            return uowi.errors.get()

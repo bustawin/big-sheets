@@ -5,9 +5,10 @@ from unittest import mock
 import pytest
 import webview as pywebview
 
-from bigsheets.adapters.sheets.sheets import EngineFactory
-from bigsheets.adapters.ui.gui import controller
+from bigsheets.adapters.errors import errors as error_adapter
+from bigsheets.adapters.sheets.sheets import EngineFactory, SheetsAdaptor
 from bigsheets.adapters.ui.gui.gui import GUIAdapter
+from bigsheets.adapters.ui.gui.query import controller
 
 DIR = Path(__file__).parent
 FIXTURES = DIR / "fixtures"
@@ -49,3 +50,17 @@ def gui():
             on_loaded()
 
     return MockedGUIAdapter, native_window
+
+
+@pytest.fixture
+def MockedSheetsAdaptor():
+    class TestSheetsAdaptor(SheetsAdaptor):
+        sheets = set()  # So we don't contaminate other tests
+
+    return TestSheetsAdaptor
+
+
+@pytest.fixture
+def MockedErrorsAdapter():
+    # No need to mock
+    return error_adapter.ErrorsAdapter

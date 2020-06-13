@@ -1,0 +1,12 @@
+:root {
+    color-scheme: light dark;
+}
+
+
+body {
+    font-family: system-ui;
+    color: WindowText;
+    background-color: Window;
+}
+
+
