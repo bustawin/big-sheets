@@ -21,7 +21,7 @@ class CSVFile:
     # of https://bugs.python.org/issue40564
 
     SAMPLE = 50
-    KB_SAMPLE = 4092
+    KB_SAMPLE = 4092 * 4
 
     def __init__(
         self, f: t.TextIO, headers: t.Optional[t.List[str]] = None
