@@ -4,5 +4,5 @@ punq==0.4.1
 zipstream_new==1.1.7
 more_itertools==8.2.0
 pytest==5.4.2
-pyinstaller==3.6
+pyinstaller==5.13.1
 ordered-set-37==1.0b2
